@@ -60,6 +60,10 @@
         <module>legend-engine-xt-mastery-protocol</module>
         <module>legend-engine-xt-mastery-pure</module>
 
+        <module>legend-engine-xt-interactive-protocol</module>
+        <module>legend-engine-xt-interactive-pure</module>
+        <module>legend-engine-xt-interactive-grammar</module>
+
         <module>legend-engine-xt-serviceStore-executionPlan</module>
         <module>legend-engine-xt-serviceStore-protocol</module>
         <module>legend-engine-xt-serviceStore-grammar</module>
@@ -892,6 +896,16 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-interactive-pure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-interactive-protocol</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-avro</artifactId>

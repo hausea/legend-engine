@@ -1,0 +1,5 @@
+{
+  "name" : "core_interactive_application",
+  "pattern" : "(meta::pure::crud|meta::pure::relational::crud)(::.*)?",
+  "dependencies" : ["platform", "core", "core_relational"]
+}

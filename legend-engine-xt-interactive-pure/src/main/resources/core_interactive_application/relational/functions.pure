@@ -1,0 +1,175 @@
+import meta::pure::functions::meta::*;
+import meta::pure::functions::lang::*;
+import meta::pure::functions::collection::*;
+
+import meta::relational::metamodel::*;
+import meta::relational::metamodel::relation::*;
+
+import meta::pure::mapping::*;
+
+import meta::pure::runtime::*;
+
+import meta::pure::crud::metamodel::*;
+
+import meta::pure::relational::crud::metamodel::*;
+import meta::pure::relational::crud::functions::*;
+
+function meta::pure::relational::crud::functions::classesToStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]): Database[1]
+{
+  let database = ^Database(
+    name = $interactiveApplication.applicationName + 'Database',
+    package = pathToPackage($interactiveApplication.applicationPackage),
+    filters = [],
+    includes = []
+  );
+  let schema = ^Schema(database = $database, name = 'default');//upperSnakeCase($interactiveApplication.applicationName));
+  let tables = $classes->map(c | classToTable($c, $schema, $interactiveApplication));
+  let joins = []; // do we even need joins?  well yes, yes we do... generate pk's?
+  ^$database(
+    schemas = [
+      ^$schema(
+        tables = $tables,
+        relations = $tables
+      )
+    ], 
+    joins = $joins);
+}
+
+function <<access.private>> meta::pure::relational::crud::functions::classToTable(class: Class<Any>[1], schema: Schema[1], interactiveApplication: InteractiveApplication[1]): Table[1]
+{
+  let table = ^Table(
+    name = upperSnakeCase($class.name->toOne()),
+    schema = $schema
+  );
+
+  let interactiveType = $interactiveApplication.typeForClass($class);
+
+  let columns = $class.properties->map(p | propertyToColumn($p, $table, $interactiveType.configurationsForProperty($p)));
+
+  let pkNames = $interactiveType->toOne().primaryKeysByPropertyName()->keys()->map(key | upperSnakeCase($key));
+  let primaryKeys = $columns->filter(c | $c.name->in($pkNames));
+
+  $table->mutateAdd('columns', $columns);
+  $table->mutateAdd('setColumns', $columns);
+  $table->mutateAdd('primaryKey', $primaryKeys);
+  $table;
+}
+
+function <<access.private>> meta::pure::relational::crud::functions::propertyToColumn(property: Property<Nil, Any|*>[1], table: Table[1], propertyConfigurations: InteractiveTypePropertyConfiguration[0..*]): Column[1]
+{
+  ^Column(
+    name = upperSnakeCase($property.name->toOne()),
+    type = pureDataTypeToRelationalDataType($property.genericType.rawType->cast(@DataType)->toOne(), $propertyConfigurations),
+    owner = $table
+  );
+}
+
+function <<access.private>> meta::pure::relational::crud::functions::pureDataTypeToRelationalDataType(type: DataType[1], propertyConfigurations: InteractiveTypePropertyConfiguration[0..*]): meta::relational::metamodel::datatype::DataType[1]
+{
+  $type->match([
+    i: PrimitiveType[1] | if ($i == String, | ^meta::relational::metamodel::datatype::Varchar(size = stringSize($propertyConfigurations)), |
+                            if ($i == Float, | ^meta::relational::metamodel::datatype::Double(), |
+                              if ($i == Boolean, | ^meta::relational::metamodel::datatype::SmallInt(), |
+                                if ($i == Integer, | ^meta::relational::metamodel::datatype::BigInt(), |
+                                  if ($i == Date, | ^meta::relational::metamodel::datatype::Timestamp(), |
+                                    ^meta::relational::metamodel::datatype::Varchar(size = 64)))))),
+    e: Enumeration<Any>[1] | ^meta::relational::metamodel::datatype::Varchar(size = 64),
+    a: Any[1] | ^meta::relational::metamodel::datatype::Float()
+  ]);
+}
+
+function <<access.private>> meta::pure::relational::crud::functions::stringSize(propertyConfigurations: InteractiveTypePropertyConfiguration[0..*]): Integer[1]
+{
+  let potentialMaxLength = $propertyConfigurations
+    ->filter(pc | $pc->instanceOf(InteractiveTypeStringPropertyConfiguration))
+    ->map(pc | $pc->cast(@InteractiveTypeStringPropertyConfiguration).maxLength)
+    ->filter(pc | $pc->isNotEmpty());
+  if($potentialMaxLength->isEmpty(),|64,|$potentialMaxLength->first()->toOne());
+}
+
+function meta::pure::relational::crud::functions::classesToMapping(classes: Class<Any>[0..*], store: Database[1], interactiveApplication: InteractiveApplication[1]): Mapping[1]
+{
+  let mapping = ^Mapping(
+    name = $interactiveApplication.applicationName + 'Mapping',
+    package = pathToPackage($interactiveApplication.applicationPackage)
+    
+    // includes : MappingInclude[*];
+    // classMappings : SetImplementation[*];
+    // enumerationMappings : EnumerationMapping<Any>[*];
+    // associationMappings : AssociationImplementation[*];
+  );
+
+  let enumerationMappings = [];//TODO:
+  let classMappings = $classes->toIndexed()->map(p | classToClassMapping($p.first, $p.second, $store, $mapping, $interactiveApplication));
+  let associationMappings = [];//TODO:
+
+  $mapping->mutateAdd('enumerationMappings', $enumerationMappings);
+  $mapping->mutateAdd('classMappings', $classMappings);
+  $mapping->mutateAdd('associationMappings', $associationMappings);
+
+  $mapping;
+}
+
+function <<access.private>> meta::pure::relational::crud::functions::classToClassMapping(id: Integer[1], class: Class<Any>[1], store: Database[1], mapping: Mapping[1], interactiveApplication: InteractiveApplication[1]): Any[1]
+{
+  let schema = $store.schema('default');//upperSnakeCase($interactiveApplication.name));
+  let table = $schema.table(upperSnakeCase($class.name->toOne()))->toOne();
+  let tableAlias = ^TableAlias(
+    name = upperSnakeCase($class.name->toOne()), 
+    database = $store,
+    relationalElement = $table);
+
+  let classMapping = ^meta::relational::mapping::RootRelationalInstanceSetImplementation(
+    id = $id->toString(),
+    class = $class,
+    root = true,
+    parent = $mapping,
+    mainTableAlias = $tableAlias,
+    userDefinedPrimaryKey = false,
+    stores = [$store],
+    distinct = false
+  );
+
+  let propertyMappings = $class.properties->toIndexed()->map(pair |
+    let id = $pair.first;
+    let property = $pair.second;
+
+    let column = $table.column(upperSnakeCase($property.name->toOne()))->toOne();
+    let columnAlias = ^TableAliasColumn(
+      alias = $tableAlias, 
+      column = $column
+    );
+
+    ^meta::relational::mapping::RelationalPropertyMapping(
+      owner = $classMapping,
+      localMappingProperty = false,
+      property = $property,
+      transformer = [], //TODO: AJH: enumeration mappings + transformer
+      relationalOperationElement = $columnAlias,
+      sourceSetImplementationId = $id->toString(),
+      targetSetImplementationId = ''
+    );
+  );
+
+  $classMapping->mutateAdd('propertyMappings', $propertyMappings);
+  
+  let pkNames = $interactiveApplication.typeForClass($class)->toOne().primaryKeysByPropertyName()->keys();
+  let primaryKeys = $propertyMappings->filter(pm | $pm.property.name->in($pkNames))->map(pm | $pm.relationalOperationElement->cast(@TableAliasColumn));
+  $classMapping->mutateAdd('primaryKey', $primaryKeys);
+
+  $classMapping;
+}
+
+function <<access.private>> meta::pure::relational::crud::functions::upperSnakeCase(string: String[1]): String[1]
+{
+  $string->substring(0, 1)->toUpper() + $string->substring(1)->chunk(1)->map(s | if ($s->toUpper() == $s, | '_' + $s, | $s->toUpper()))->joinStrings()
+}
+
+function meta::pure::relational::crud::functions::defaultRelationalStore(connection: Function<{meta::pure::store::Store[1] -> meta::pure::runtime::Connection[1]}>[1]): InteractiveApplicationStore[1]
+{
+  ^meta::pure::relational::crud::metamodel::RelationalInteractiveApplicationStore(
+    generateStore = {classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]|classesToStore($classes, $interactiveApplication)},
+    generateMapping = {classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]|classesToMapping($classes, $store->cast(@Database), $interactiveApplication)},
+    connection = $connection
+  );
+}

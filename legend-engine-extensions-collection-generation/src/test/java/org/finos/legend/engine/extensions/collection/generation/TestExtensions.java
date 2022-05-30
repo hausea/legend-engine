@@ -206,7 +206,8 @@ public class TestExtensions
                 .with(org.finos.legend.engine.protocol.pure.v1.TextProtocolExtension.class)
                 .with(org.finos.legend.engine.external.format.flatdata.FlatDataProtocolExtension.class)
                 .with(org.finos.legend.engine.external.format.json.JsonProtocolExtension.class)
-                .with(org.finos.legend.engine.external.format.xml.XmlProtocolExtension.class);
+                .with(org.finos.legend.engine.external.format.xml.XmlProtocolExtension.class)
+                .with(org.finos.legend.engine.protocol.pure.v1.CrudProtocolExtension.class);
     }
 
     protected Iterable<? extends Class<? extends GenerationExtension>> getExpectedGenerationExtensions()
@@ -236,6 +237,7 @@ public class TestExtensions
                 .with(org.finos.legend.engine.language.pure.grammar.from.RelationalGrammarParserExtension.class)
                 .with(org.finos.legend.engine.language.pure.dsl.service.grammar.from.ServiceParserExtension.class)
                 .with(org.finos.legend.engine.language.pure.grammar.from.ServiceStoreGrammarParserExtension.class)
+                .with(org.finos.legend.engine.language.pure.dsl.interactive.grammar.from.InteractiveApplicationParserExtension.class)
                 .with(TextParserExtension.class);
     }
 
@@ -255,6 +257,7 @@ public class TestExtensions
                 .with(org.finos.legend.engine.language.pure.grammar.to.BigQueryGrammarComposerExtension.class)
                 .with(org.finos.legend.engine.language.pure.dsl.service.grammar.to.ServiceGrammarComposerExtension.class)
                 .with(org.finos.legend.engine.language.pure.grammar.to.ServiceStoreGrammarComposerExtension.class)
+                .with(org.finos.legend.engine.language.pure.dsl.interactive.grammar.to.InteractiveApplicationGrammarComposerExtension.class)
                 .with(TextGrammarComposerExtension.class);
     }
 
@@ -315,6 +318,7 @@ public class TestExtensions
                 .with("core_persistence_cloud")
                 .with("core_relational")
                 .with("core_servicestore")
+                .with("core_interactive")
                 .with("core_text");
     }
 }

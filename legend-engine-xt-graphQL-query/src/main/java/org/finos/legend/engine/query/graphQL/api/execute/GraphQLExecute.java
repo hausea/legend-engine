@@ -24,6 +24,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.tuple.Tuples;
 import org.eclipse.collections.impl.utility.Iterate;
@@ -72,6 +73,10 @@ import org.finos.legend.pure.generated.Root_meta_pure_executionPlan_ExecutionPla
 import org.finos.legend.pure.generated.core_pure_executionPlan_executionPlan_print;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.functions.collection.Pair;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.mapping.Mapping;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.Function;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class;
+import org.finos.legend.pure.m4.coreinstance.SourceInformation;
+import org.finos.legend.pure.runtime.java.compiled.generation.processors.support.CompiledSupport;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.jax.rs.annotations.Pac4JProfileManager;
@@ -175,6 +180,33 @@ public class GraphQLExecute extends GraphQL
     }
 
     @POST
+    @ApiOperation(value = "Execute a GraphQL query in the context of an Interactive Application.")
+    @Path("execute/dev/{projectId}/{branch}/{interactiveApplication}")
+    @Consumes({MediaType.APPLICATION_JSON, APPLICATION_ZLIB})
+    public Response executeDev(@Context HttpServletRequest request, @PathParam("projectId") String projectId, @PathParam("branch") String branch, @PathParam("interactiveApplication") String interactiveApplicationName, Query query, @ApiParam(hidden = true) @Pac4JProfileManager ProfileManager<CommonProfile> pm)
+    {
+        MutableList<CommonProfile> profiles = ProfileManagerHelper.extractProfiles(pm);
+        try (Scope scope = GlobalTracer.get().buildSpan("GraphQL: Interactive Application: Execute").startActive(true))
+        {
+            PureModel pureModel = loadModel(profiles, request, projectId, branch);
+//            Function<?> interactiveApplicationFunction = pureModel.getFunction(interactiveApplicationName + "::buildApp", false);
+//            Root_meta_pure_crud_metamodel_InteractiveApplication interactiveApplication = (Root_meta_pure_crud_metamodel_InteractiveApplication) CoreGen.evaluate(pureModel.getExecutionSupport(), interactiveApplicationFunction, new Object[0]);
+            org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_ResolvedInteractiveApplication resolvedInteractiveApplication =
+                    org.finos.legend.pure.generated.core_interactive_application_interactive_application_functions.Root_meta_pure_crud_functions_resolveInteractiveApplication_String_1__ResolvedInteractiveApplication_$0_1$_(interactiveApplicationName, pureModel.getExecutionSupport());
+            return this.executeDev(
+                    pureModel,
+                    query,
+                    () -> resolvedInteractiveApplication._queryClass(),
+                    () -> resolvedInteractiveApplication._mapping(),
+                    () -> resolvedInteractiveApplication._runtime());
+        }
+        catch (Exception ex)
+        {
+            return Response.ok(new GraphQLErrorMain(ex.getMessage())).build();
+        }
+    }
+
+    @POST
     @ApiOperation(value = "Execute a GraphQL query in the context of a Mapping and a Runtime.")
     @Path("execute/dev/{projectId}/{branch}/query/{queryClassPath}/mapping/{mappingPath}/runtime/{runtimePath}")
     @Consumes({MediaType.APPLICATION_JSON, APPLICATION_ZLIB})
@@ -184,7 +216,28 @@ public class GraphQLExecute extends GraphQL
         try (Scope scope = GlobalTracer.get().buildSpan("GraphQL: Execute").startActive(true))
         {
             PureModel pureModel = loadModel(profiles, request, projectId, branch);
-            org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> _class = pureModel.getClass(queryClassPath);
+            return this.executeDev(
+                    pureModel,
+                    query,
+                    () -> pureModel.getClass(queryClassPath),
+                    () -> pureModel.getMapping(mappingPath),
+                    () -> pureModel.getRuntime(runtimePath));
+        }
+        catch (Exception ex)
+        {
+            return Response.ok(new GraphQLErrorMain(ex.getMessage())).build();
+        }
+    }
+
+    private Response executeDev(
+            PureModel pureModel,
+            Query query,
+            Function0<org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?>> classFunction0,
+            Function0<Mapping> mappingFunction0,
+            Function0<org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime> runtimeFunction0)
+    {
+
+        org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> _class = classFunction0.value();
 
             Document document = GraphQLGrammarParser.newInstance().parseDocument(query.query);
             org.finos.legend.pure.generated.Root_meta_external_query_graphQL_metamodel_Document queryDoc = toPureModel(document, pureModel);
@@ -196,9 +249,9 @@ public class GraphQLExecute extends GraphQL
             }
             else
             {
-                Mapping mapping = pureModel.getMapping(mappingPath);
-                org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime runtime = pureModel.getRuntime(runtimePath);
-                RichIterable<? extends Pair<? extends String, ? extends Root_meta_pure_executionPlan_ExecutionPlan>> purePlans = core_external_query_graphql_transformation.Root_meta_external_query_graphQL_transformation_queryToPure_getPlansFromGraphQL_Class_1__Mapping_1__Runtime_1__Document_1__Extension_MANY__Pair_MANY_(_class, mapping, runtime, queryDoc, Root_meta_relational_extension_relationalExtensions__Extension_MANY_(pureModel.getExecutionSupport()), pureModel.getExecutionSupport());
+                Mapping mapping = mappingFunction0.value();
+                org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime runtime = runtimeFunction0.value();
+                RichIterable<? extends Pair<? extends String, ? extends Root_meta_pure_executionPlan_ExecutionPlan>> purePlans = core_external_query_graphql_transformation.Root_meta_external_query_graphQL_transformation_queryToPure_getPlansFromGraphQL_Class_1__Mapping_1__Runtime_1__Document_1__RouterExtension_MANY__Pair_MANY_(_class, mapping, runtime, queryDoc, core_relational_relational_router_router_extension.Root_meta_pure_router_extension_defaultRelationalExtensions__RouterExtension_MANY_(pureModel.getExecutionSupport()), pureModel.getExecutionSupport());
                 Collection<org.eclipse.collections.api.tuple.Pair<String, SingleExecutionPlan>> plans = Iterate.collect(purePlans, p ->
                         {
                             Root_meta_pure_executionPlan_ExecutionPlan nPlan = PlanPlatform.JAVA.bindPlan(p._second(), "ID", pureModel, Root_meta_relational_extension_relationalExtensions__Extension_MANY_(pureModel.getExecutionSupport()));
@@ -206,17 +259,17 @@ public class GraphQLExecute extends GraphQL
                         }
                 );
 
-                return Response.ok(
-                        (StreamingOutput) outputStream ->
+            return Response.ok(
+                    (StreamingOutput) outputStream ->
+                    {
+                        try (JsonGenerator generator = new JsonFactory().createGenerator(outputStream)
+                                .disable(JsonGenerator.Feature.AUTO_CLOSE_JSON_CONTENT)
+                                .enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN);)
                         {
-                            try (JsonGenerator generator = new JsonFactory().createGenerator(outputStream)
-                                    .disable(JsonGenerator.Feature.AUTO_CLOSE_JSON_CONTENT)
-                                    .enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN);)
-                            {
-                                generator.writeStartObject();
-                                generator.setCodec(new ObjectMapper());
-                                generator.writeFieldName("data");
-                                generator.writeStartObject();
+                            generator.writeStartObject();
+                            generator.setCodec(new ObjectMapper());
+                            generator.writeFieldName("data");
+                            generator.writeStartObject();
 
                                 plans.forEach(p ->
                                 {
@@ -241,10 +294,6 @@ public class GraphQLExecute extends GraphQL
                             }
                         }).build();
             }
-        }
-        catch (Exception ex)
-        {
-            return Response.ok(new GraphQLErrorMain(ex.getMessage())).build();
         }
     }
 

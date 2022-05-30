@@ -1,0 +1,144 @@
+import meta::pure::functions::meta::*;
+import meta::pure::functions::lang::*;
+import meta::pure::functions::collection::*;
+
+import meta::relational::metamodel::*;
+import meta::relational::metamodel::relation::*;
+
+import meta::pure::mapping::*;
+
+import meta::pure::runtime::*;
+
+import meta::pure::crud::metamodel::*;
+import meta::pure::crud::functions::*;
+
+//TODO: AJH: Temporary - InteractiveApplication DSL :)
+function meta::pure::crud::functions::resolveInteractiveApplication(interactiveApplicationFunctionPath: String[1]): ResolvedInteractiveApplication[0..1]
+{
+  let generatorFunctionPackage = $interactiveApplicationFunctionPath->split('::')->fold({pathPart: String[1], package: PackageableElement[1] | 
+    let target = $package->cast(@Package).children->filter(c | $c.name == $pathPart);
+    if ($target->isEmpty(), | Nil, | $target->toOne());
+  }, ::);
+  let generatorFunctions = 
+    $generatorFunctionPackage->cast(@Package).children
+      ->filter(c | $c->instanceOf(meta::pure::metamodel::function::Function))
+      ->filter(f | $f->cast(@meta::pure::metamodel::function::Function<Any>).functionName == 'buildApp')
+      ->map(f | $f->cast(@meta::pure::metamodel::function::Function<{->InteractiveApplication[1]}>));
+
+  if ($generatorFunctions->isEmpty(),
+    | [],
+    | resolveInteractiveApplication($generatorFunctions->first()->toOne()->eval()));
+}
+
+function meta::pure::crud::functions::resolveInteractiveApplication(interactiveApplication: InteractiveApplication[1]): ResolvedInteractiveApplication[1]
+{
+  let store = interactiveApplicationToStore($interactiveApplication);
+  let mapping = interactiveApplicationToMapping($interactiveApplication, $store);
+  ^ResolvedInteractiveApplication(
+    interactiveApplication = $interactiveApplication,
+    queryClass = generateQueryClassForInteractiveApplication($interactiveApplication),
+    store = $store,
+    mapping = $mapping,
+    runtime = generateRuntimeForInteractiveApplication($interactiveApplication, $store)
+  );
+}
+
+function <<access.private>> meta::pure::crud::functions::generateQueryClassForInteractiveApplication(interactiveApplication: InteractiveApplication[1]): Class<Any>[1]
+{
+  let queryClass = ^Class<Any>(name = $interactiveApplication.applicationName, package = pathToPackage($interactiveApplication.applicationPackage));
+  
+  let properties = createServiceDerivedQueryProperties($queryClass, $interactiveApplication);
+
+  $queryClass->mutateAdd('generalizations', ^Generalization(general = ^GenericType(rawType = Any), specific = $queryClass));
+  $queryClass->mutateAdd('qualifiedProperties', $properties);
+  
+  $queryClass;
+
+  // let queryClassInstance = $queryClass->dynamicNew([]);
+    // [^KeyValue(key = 'stringProperty', value = 'word')]);
+
+  // $queryClassInstance;
+}
+
+function <<access.private>> meta::pure::crud::functions::createServiceDerivedQueryProperties(queryClass: Class<Any>[1], interactiveApplication: InteractiveApplication[1]): QualifiedProperty<Any>[*]
+{
+  $interactiveApplication.types->fold({type, properties| 
+    $type.services->map(service | 
+      let responsePropertyType = $type.baseClass;
+      let multiplicity = ZeroMany;
+
+      let expressionSequence = $service.query.expressionSequence;
+      let servicePropertyTemplate = 
+        ^QualifiedProperty<Any>(
+          name = $service.name,
+          multiplicity = $multiplicity,
+          genericType = ^GenericType(rawType = $responsePropertyType),
+          owner = $queryClass,
+          expressionSequence = $expressionSequence
+        );
+
+      let serviceProperty = ^$servicePropertyTemplate(
+        classifierGenericType = ^GenericType(
+          rawType = QualifiedProperty,
+          typeArguments = [
+            ^GenericType(
+              rawType = ^FunctionType(
+                returnMultiplicity = $multiplicity,
+                returnType = ^GenericType(rawType = $responsePropertyType)
+              )
+            )
+          ]
+        )
+      )->evaluateAndDeactivate();
+      
+      $properties->add($serviceProperty);
+    )
+  }, [])
+}
+
+function <<access.private>> meta::pure::crud::functions::generateRuntimeForInteractiveApplication(interactiveApplication: InteractiveApplication[1], store: meta::pure::store::Store[1]): Runtime[1]
+{
+  ^Runtime(
+    connections = [
+      $interactiveApplication.store.connection->eval($store)
+    ]
+  );
+}
+
+function <<access.private>> meta::pure::crud::functions::allClassesForInteractiveApplication(interactiveApplication: InteractiveApplication[1]): Class<Any>[*]
+{
+  $interactiveApplication.types->fold({type, classes |
+    $classes->concatenate([$type.baseClass]);
+    //TODO: AJH: also traverse the graph fetches and extract ALL classes
+    //$type.graphScope
+  }, []);
+}
+
+function <<access.private>> meta::pure::crud::functions::interactiveApplicationToStore(interactiveApplication: InteractiveApplication[1]): meta::pure::store::Store[1]
+{
+  classesToStore(allClassesForInteractiveApplication($interactiveApplication), $interactiveApplication)
+}
+
+function <<access.private>> meta::pure::crud::functions::classesToStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]): meta::pure::store::Store[1]
+{
+  $interactiveApplication.store.generateStore->eval($classes, $interactiveApplication)
+}
+
+function <<access.private>> meta::pure::crud::functions::interactiveApplicationToMapping(interactiveApplication: InteractiveApplication[1], store: meta::pure::store::Store[1]): Mapping[1]
+{
+  classesToMapping(allClassesForInteractiveApplication($interactiveApplication), $store, $interactiveApplication)
+}
+
+function <<access.private>> meta::pure::crud::functions::classesToMapping(classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]): Mapping[1]
+{
+  $interactiveApplication.store.generateMapping->eval($classes, $store, $interactiveApplication)
+}
+
+function meta::pure::crud::functions::defaultStore(): InteractiveApplicationStore[1]
+{
+  ^InteractiveApplicationStore(
+    generateStore = {classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]|^meta::pure::store::Store()},
+    generateMapping = {classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]|^Mapping()},
+    connection = {store: meta::pure::store::Store[1]|^meta::pure::runtime::Connection(element = $store)}->cast(@Function<{meta::pure::store::Store[1]->Connection[1]}>)
+  );
+}

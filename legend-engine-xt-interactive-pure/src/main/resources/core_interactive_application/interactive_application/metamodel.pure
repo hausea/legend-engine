@@ -1,0 +1,171 @@
+import meta::pure::runtime::*;
+import meta::pure::crud::metamodel::*;
+
+Class
+{doc.doc = 'The representation of an online transaction processing application.'}
+meta::pure::crud::metamodel::InteractiveApplication extends PackageableElement
+{
+  applicationPackage: String[1];
+  applicationName: String[1];
+  documentation: String[0..1];
+  store: InteractiveApplicationStore[1];
+
+  globalAuthorization: InteractiveAuthorization[0..1];
+  types: InteractiveType[0..*];
+
+  typeForClass(class: Class<Any>[1])
+  {
+    $this.types->filter(type | $type.baseClass == $class)
+  }: InteractiveType[0..*];
+}
+
+Class
+{doc.doc = 'The type of store to allocate and generate for the application.'}
+meta::pure::crud::metamodel::InteractiveApplicationStore
+{
+  // generateStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1])
+  // {
+  //   ^meta::pure::store::Store();
+  // }: meta::pure::store::Store[1];
+
+  // generateMapping(classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1])
+  // {
+  //   ^meta::pure::mapping::Mapping();
+  // }: meta::pure::mapping::Mapping[1];
+  generateStore: Function<{Class<Any>[0..*], InteractiveApplication[1] -> meta::pure::store::Store[1]}>[1];
+  generateMapping: Function<{Class<Any>[0..*], meta::pure::store::Store[1], InteractiveApplication[1] -> meta::pure::mapping::Mapping[1]}>[1];
+  connection: Function<{meta::pure::store::Store[1] -> meta::pure::runtime::Connection[1]}>[1];
+}
+
+Class
+<<typemodifiers.abstract>>
+{doc.doc = 'An authorization implementation for an InteractiveApplication.'}
+meta::pure::crud::metamodel::InteractiveAuthorization
+{
+  {doc.doc = 'A function that takes the context of the InteractiveRequest, and determines if the action is authorized.'}
+  authorizationFunction: Function<{->Boolean[1]}>[1];
+}
+
+Class
+{doc.doc = 'Default authorization implementation that allows all access.'}
+meta::pure::crud::metamodel::DefaultInteractiveAuthorization extends InteractiveAuthorization
+{
+}
+
+Class
+{doc.doc = 'A service container for a specific type.'}
+meta::pure::crud::metamodel::InteractiveType
+{
+  baseClass: Class<Any>[1];
+  graphScope: meta::pure::graphFetch::RootGraphFetchTree<Any>[1];
+  configuration: InteractiveTypeConfiguration[0..*];
+  services: InteractiveService[0..*];
+
+  primaryKeys()
+  {
+    let primaryKeyConfiguration = $this.configuration->filter(config | $config->instanceOf(InteractiveTypePrimaryKeysConfiguration))->map(config | $config->cast(@InteractiveTypePrimaryKeysConfiguration));
+    if($primaryKeyConfiguration->isEmpty(), |[],|$primaryKeyConfiguration->toOne().primaryKeys);
+  }: InteractiveTypePrimaryKeysPrimaryKeyConfiguration[0..*];
+
+  primaryKeysByPropertyName()
+  {
+    $this.primaryKeys()->map(pk | pair($pk.property.name->toOne(), $pk))->newMap()
+  }: Map<String, InteractiveTypePrimaryKeysPrimaryKeyConfiguration>[1];
+
+  configurationsForProperty(property: Property<Nil, Any|Any>[1])
+  {
+    $this.configuration
+      ->filter(config | $config->instanceOf(InteractiveTypePropertyConfiguration))
+      ->map(config | $config->cast(@InteractiveTypePropertyConfiguration))
+      ->filter(config | $config.property.name == $property.name)
+  }: InteractiveTypePropertyConfiguration[0..*];
+}
+
+Class
+<<typemodifiers.abstract>>
+{doc.doc = 'Configuration specification for Interactive Type and it\'s properties.'}
+meta::pure::crud::metamodel::InteractiveTypeConfiguration
+{
+}
+
+Class
+<<typemodifiers.abstract>>
+{doc.doc = 'Type level specification configuration.'}
+meta::pure::crud::metamodel::InteractiveTypeTypeConfiguration extends InteractiveTypeConfiguration
+{
+}
+
+Class
+<<typemodifiers.abstract>>
+{doc.doc = 'Type level specification configuration.'}
+meta::pure::crud::metamodel::InteractiveTypePrimaryKeysConfiguration extends InteractiveTypeTypeConfiguration
+{
+  primaryKeys: InteractiveTypePrimaryKeysPrimaryKeyConfiguration[0..*];
+}
+
+Class
+<<typemodifiers.abstract>>
+{doc.doc = 'Type level specification configuration.'}
+meta::pure::crud::metamodel::InteractiveTypePrimaryKeysPrimaryKeyConfiguration
+{
+  property: Property<Nil, Any|1>[1];
+  strategy: PrimaryKeyStrategy[1];
+}
+
+Enum
+meta::pure::crud::metamodel::PrimaryKeyStrategy
+{
+  NONE, SYNTHETIC, MAX
+}
+
+Class
+<<typemodifiers.abstract>>
+{doc.doc = 'Property level specification configuration'}
+meta::pure::crud::metamodel::InteractiveTypePropertyConfiguration extends InteractiveTypeConfiguration
+{
+  property: Property<Nil, Any|*>[1];
+}
+
+Class
+{doc.doc = 'String property specification configuration'}
+meta::pure::crud::metamodel::InteractiveTypeStringPropertyConfiguration extends InteractiveTypePropertyConfiguration
+{
+  minLength: Integer[0..1];
+  maxLength: Integer[0..1];
+}
+
+Class
+<<typemodifiers.abstract>>
+{doc.doc = 'An service definition that is interactive, in that it allows for both read and write.'}
+meta::pure::crud::metamodel::InteractiveService
+{
+  {doc.doc = 'The endpoint corresponding to this service.  Parameters are represented in brackets, e.g. /api/type/{id}'}
+  name: String[1];
+  authorization: InteractiveAuthorization[0..1];
+  query: LambdaFunction<Any>[1]; //LambdaFunction<{Any[*] -> Any[*]}>[1];
+}
+
+Class
+{doc.doc = 'A read-only interactive service.'}
+meta::pure::crud::metamodel::ReadInteractiveService extends InteractiveService
+{
+}
+
+Class
+{doc.doc = 'A create interactive service.'}
+meta::pure::crud::metamodel::CreateInteractiveService extends InteractiveService
+{
+  writeScope: meta::pure::graphFetch::RootGraphFetchTree<Any>[1];
+}
+
+Class
+{doc.doc = 'Generated application with everything.'}
+meta::pure::crud::metamodel::ResolvedInteractiveApplication
+{
+  interactiveApplication: InteractiveApplication[1];
+  queryClass: Class<Any>[1];
+
+  store: meta::pure::store::Store[1];
+  mapping: meta::pure::mapping::Mapping[1];
+  runtime: Runtime[1];
+}
