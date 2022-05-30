@@ -144,23 +144,46 @@
             <groupId>org.finos.legend.pure</groupId>
             <artifactId>legend-pure-m3-platform</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-m2-dsl-mapping</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-m2-store-relational</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-runtime-java-extension-external-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-runtime-java-extension-store-relational</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.finos.legend.pure</groupId>
             <artifactId>legend-pure-code-compiled-platform-java</artifactId>
-            <scope>runtime</scope>
+<!--            <scope>runtime</scope>-->
         </dependency>
         <dependency>
             <groupId>org.finos.legend.pure</groupId>
             <artifactId>legend-pure-code-compiled-core</artifactId>
-            <scope>runtime</scope>
+<!--            <scope>runtime</scope>-->
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-xt-relationalStore-pure</artifactId>
-            <scope>runtime</scope>
+<!--            <scope>runtime</scope>-->
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>
+<!--            <scope>runtime</scope>-->
+        </dependency>
+        <!-- PURE -->
 
+        <!-- ECLIPSE COLLECTIONS -->
         <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections</artifactId>
@@ -169,39 +192,20 @@
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
         </dependency>
-        <!-- PURE -->
+        <!-- ECLIPSE COLLECTIONS -->
 
-
-        <dependency>
-            <groupId>org.finos.legend.pure</groupId>
-            <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>
-            <scope>test</scope>
-        </dependency>
+        <!-- TEST -->
         <dependency>
             <groupId>org.finos.legend.pure</groupId>
             <artifactId>legend-pure-code-compiled-tests</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.pure</groupId>
-            <artifactId>legend-pure-m2-dsl-mapping</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.pure</groupId>
-            <artifactId>legend-pure-m2-store-relational</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.pure</groupId>
-            <artifactId>legend-pure-runtime-java-extension-store-relational</artifactId>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
+<!--            <scope>test</scope>-->
         </dependency>
+        <!-- TEST -->
     </dependencies>
 </project>
