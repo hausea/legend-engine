@@ -7,13 +7,18 @@ Class
 {doc.doc = 'The type of store to allocate and generate for the application.'}
 meta::pure::relational::crud::metamodel::RelationalInteractiveApplicationStore extends meta::pure::crud::metamodel::InteractiveApplicationStore
 {
-  // generateStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1])
-  // {
-  //   classesToStore($classes, $interactiveApplication);
-  // }: meta::pure::store::Store[1];
+  generateStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1])
+  {
+    classesToStore($classes, $interactiveApplication);
+  }: meta::pure::store::Store[1];
 
-  // generateMapping(classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1])
-  // {
-  //   classesToMapping($classes, $store->cast(@meta::relational::metamodel::Database), $interactiveApplication);
-  // }: meta::pure::mapping::Mapping[1];
+  generateMapping(classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1])
+  {
+    classesToMapping($classes, $store->cast(@meta::relational::metamodel::Database), $interactiveApplication);
+  }: meta::pure::mapping::Mapping[1];
+}
+
+function meta::pure::relational::crud::functions::generateRelationalStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]): meta::pure::store::Store[1]
+{
+  classesToStore($classes, $interactiveApplication)
 }

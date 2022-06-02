@@ -121,7 +121,8 @@ function <<access.private>> meta::pure::crud::functions::interactiveApplicationT
 
 function <<access.private>> meta::pure::crud::functions::classesToStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]): meta::pure::store::Store[1]
 {
-  $interactiveApplication.store.generateStore->eval($classes, $interactiveApplication)
+  //$interactiveApplication.store.generateStore->eval($classes, $interactiveApplication)
+  $interactiveApplication.store.generateStore($classes, $interactiveApplication)
 }
 
 function <<access.private>> meta::pure::crud::functions::interactiveApplicationToMapping(interactiveApplication: InteractiveApplication[1], store: meta::pure::store::Store[1]): Mapping[1]
@@ -131,14 +132,15 @@ function <<access.private>> meta::pure::crud::functions::interactiveApplicationT
 
 function <<access.private>> meta::pure::crud::functions::classesToMapping(classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]): Mapping[1]
 {
-  $interactiveApplication.store.generateMapping->eval($classes, $store, $interactiveApplication)
+  // $interactiveApplication.store.generateMapping->eval($classes, $store, $interactiveApplication)
+  $interactiveApplication.store.generateMapping($classes, $store, $interactiveApplication)
 }
 
 function meta::pure::crud::functions::defaultStore(): InteractiveApplicationStore[1]
 {
   ^InteractiveApplicationStore(
-    generateStore = {classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]|^meta::pure::store::Store()},
-    generateMapping = {classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]|^Mapping()},
+    // generateStore = {classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]|^meta::pure::store::Store()},
+    // generateMapping = {classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]|^Mapping()},
     connection = {store: meta::pure::store::Store[1]|^meta::pure::runtime::Connection(element = $store)}->cast(@Function<{meta::pure::store::Store[1]->Connection[1]}>)
   );
 }

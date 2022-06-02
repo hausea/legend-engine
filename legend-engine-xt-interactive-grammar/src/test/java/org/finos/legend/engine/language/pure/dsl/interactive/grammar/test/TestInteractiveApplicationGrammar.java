@@ -12,7 +12,7 @@ public interface TestInteractiveApplicationGrammar
                 "    type: H2;\n" +
                 "  }\n" +
                 "  globalAuthorization: [None];\n" +
-                "  RootType(Firm)\n" +
+                "  RootType(meta::demo::crud::Firm)\n" +
                 "  {\n" +
                 "    graphScope: ();\n" +
                 "    primaryKey: id -> NONE;\n" +

@@ -52,8 +52,8 @@ public class HelperInteractiveApplicationBuilder
     public static Root_meta_pure_crud_metamodel_InteractiveApplicationStore buildStore(InteractiveApplicationStore store, CompileContext context)
     {
         Root_meta_pure_crud_metamodel_InteractiveApplicationStore pureStore = new Root_meta_pure_crud_metamodel_InteractiveApplicationStore_Impl("");
-        pureStore._generateStore(buildLambda(store.generateStore, context));
-        pureStore._generateMapping(buildLambda(store.generateMapping, context));
+//        pureStore._generateStore(buildLambda(store.generateStore, context));
+//        pureStore._generateMapping(buildLambda(store.generateMapping, context));
         pureStore._connection(buildLambda(store.connection, context));
         return pureStore;
     }

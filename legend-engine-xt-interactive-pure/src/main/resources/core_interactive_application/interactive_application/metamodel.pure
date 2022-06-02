@@ -23,17 +23,21 @@ Class
 {doc.doc = 'The type of store to allocate and generate for the application.'}
 meta::pure::crud::metamodel::InteractiveApplicationStore
 {
-  // generateStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1])
-  // {
-  //   ^meta::pure::store::Store();
-  // }: meta::pure::store::Store[1];
+  generateStore(classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1])
+  {
+    ^meta::pure::store::Store();
+  }: meta::pure::store::Store[1];
 
-  // generateMapping(classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1])
-  // {
-  //   ^meta::pure::mapping::Mapping();
-  // }: meta::pure::mapping::Mapping[1];
-  generateStore: Function<{Class<Any>[0..*], InteractiveApplication[1] -> meta::pure::store::Store[1]}>[1];
-  generateMapping: Function<{Class<Any>[0..*], meta::pure::store::Store[1], InteractiveApplication[1] -> meta::pure::mapping::Mapping[1]}>[1];
+  generateMapping(classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1])
+  {
+    ^meta::pure::mapping::Mapping();
+  }: meta::pure::mapping::Mapping[1];
+
+  // generateStore: Function<{Class<Any>[0..*], InteractiveApplication[1] -> meta::pure::store::Store[1]}>[1] = 
+  //   ^LambdaFunction<{Class<Any>[0..*], InteractiveApplication[1] -> meta::pure::store::Store[1]}>(expressionSequence = {classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]|^meta::pure::store::Store()});
+  // generateMapping: Function<{Class<Any>[0..*], meta::pure::store::Store[1], InteractiveApplication[1] -> meta::pure::mapping::Mapping[1]}>[1] =
+  //   ^LambdaFunction<{Class<Any>[0..*], meta::pure::store::Store[1], InteractiveApplication[1] -> meta::pure::mapping::Mapping[1]}>(expressionSequence = {classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]|^meta::pure::mapping::Mapping()});
+
   connection: Function<{meta::pure::store::Store[1] -> meta::pure::runtime::Connection[1]}>[1];
 }
 

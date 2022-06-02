@@ -168,8 +168,8 @@ function <<access.private>> meta::pure::relational::crud::functions::upperSnakeC
 function meta::pure::relational::crud::functions::defaultRelationalStore(connection: Function<{meta::pure::store::Store[1] -> meta::pure::runtime::Connection[1]}>[1]): InteractiveApplicationStore[1]
 {
   ^meta::pure::relational::crud::metamodel::RelationalInteractiveApplicationStore(
-    generateStore = {classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]|classesToStore($classes, $interactiveApplication)},
-    generateMapping = {classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]|classesToMapping($classes, $store->cast(@Database), $interactiveApplication)},
+    // generateStore = {classes: Class<Any>[0..*], interactiveApplication: InteractiveApplication[1]|classesToStore($classes, $interactiveApplication)},
+    // generateMapping = {classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: InteractiveApplication[1]|classesToMapping($classes, $store->cast(@Database), $interactiveApplication)},
     connection = $connection
   );
 }

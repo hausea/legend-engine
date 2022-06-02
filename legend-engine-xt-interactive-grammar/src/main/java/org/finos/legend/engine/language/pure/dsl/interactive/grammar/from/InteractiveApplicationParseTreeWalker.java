@@ -113,10 +113,11 @@ public class InteractiveApplicationParseTreeWalker
 
         InteractiveApplicationStore interactiveApplicationStore = new RelationalInteractiveApplicationStore();
 
-        interactiveApplicationStore.generateStore =
-                this.pureGrammarParser.parseLambda("{classes: Class<Any>[0..*], interactiveApplication: meta::pure::crud::metamodel::InteractiveApplication[1]|meta::pure::relational::crud::functions::classesToStore($classes, $interactiveApplication)}");
-        interactiveApplicationStore.generateMapping =
-                this.pureGrammarParser.parseLambda("{classes: Class<Any>[0..*], store: meta::pure::store::Store[1], interactiveApplication: meta::pure::crud::metamodel::InteractiveApplication[1]|meta::pure::relational::crud::functions::classesToMapping($classes, $store->cast(@Database), $interactiveApplication)}");
+        // meta::pure::metamodel::type::Class<meta::pure::metamodel::type::Any>
+//        interactiveApplicationStore.generateStore =
+//                this.pureGrammarParser.parseLambda("{classes: meta::pure::metamodel::type::Class[0..*], interactiveApplication: meta::pure::crud::metamodel::InteractiveApplication[1]|meta::pure::relational::crud::functions::classesToStore($classes, $interactiveApplication)}");
+//        interactiveApplicationStore.generateMapping =
+//                this.pureGrammarParser.parseLambda("{classes: meta::pure::metamodel::type::Class[0..*], store: meta::pure::store::Store[1], interactiveApplication: meta::pure::crud::metamodel::InteractiveApplication[1]|meta::pure::relational::crud::functions::classesToMapping($classes, $store->cast(@Database), $interactiveApplication)}");
 
         //TODO: AJH: add support for other relational stores
         if (relationalTypeContext.relationalTypeOption().RELATIONAL_TYPE_H2() != null)
