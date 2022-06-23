@@ -38,13 +38,38 @@ store:                                      STORE COLON (relationalStore)
 ;
 relationalStore:                            RELATIONAL_STORE
                                                 BRACE_OPEN
-                                                    (relationalType)*
+                                                    (
+                                                        relationalType
+                                                        | relationalAuth
+                                                        | relationalDatasourceSpec
+                                                    )*
                                                 BRACE_CLOSE
 ;
 relationalType:                             RELATIONAL_TYPE COLON relationalTypeOption SEMI_COLON
 ;
 relationalTypeOption:                       (RELATIONAL_TYPE_H2)
 ;
+
+
+
+
+
+relationalAuth:                             RELATIONAL_AUTH_STRATEGY COLON specification SEMI_COLON
+;
+relationalDatasourceSpec:                   RELATIONAL_DATASOURCE_SPEC COLON specification SEMI_COLON
+;
+specification:                              specificationType (specificationValueBody)?
+;
+specificationType:                          VALID_STRING
+;
+specificationValueBody:                     BRACE_OPEN (specificationValue)*
+;
+specificationValue:                         SPECIFICATION_BRACE_OPEN | SPECIFICATION_CONTENT | SPECIFICATION_BRACE_CLOSE
+;
+
+
+
+
 globalAuthorization:                        GLOBAL_AUTHORIZATION COLON BRACKET_OPEN (identifier|NONE) (COMMA identifier)* BRACKET_CLOSE SEMI_COLON
 ;
 rootType:                                   ROOT_TYPE PAREN_OPEN qualifiedName PAREN_CLOSE
@@ -67,15 +92,48 @@ stringLength:                               STRING_LENGTH COLON identifier ARROW
 ;
 stringLengthValue:                          INTEGER
 ;
-service:                                    (readService)+
+service:                                    (readService | createService | updateService | upsertService | deleteService)+
 ;
-readService:                                READ_SERVICE PAREN_OPEN (serviceFunctionParameter (COMMA serviceFunctionParameter)* ARROW)? identifier PAREN_CLOSE
+readService:                                READ_SERVICE serviceDescription
                                                 BRACE_OPEN
                                                     (
                                                         authorization |
                                                         query
                                                     )*
                                                 BRACE_CLOSE
+;
+createService:                              CREATE_SERVICE serviceDescription
+                                                BRACE_OPEN
+                                                    (
+                                                        authorization
+                                                    )*
+                                                BRACE_CLOSE
+;
+updateService:                              UPDATE_SERVICE serviceDescription
+                                                BRACE_OPEN
+                                                    (
+                                                        authorization |
+                                                        query
+                                                    )*
+                                                BRACE_CLOSE
+;
+upsertService:                              UPSERT_SERVICE serviceDescription
+                                                BRACE_OPEN
+                                                    (
+                                                        authorization |
+                                                        query
+                                                    )*
+                                                BRACE_CLOSE
+;
+deleteService:                              DELETE_SERVICE serviceDescription
+                                                BRACE_OPEN
+                                                    (
+                                                        authorization |
+                                                        query
+                                                    )*
+                                                BRACE_CLOSE
+;
+serviceDescription:                         PAREN_OPEN (serviceFunctionParameter (COMMA serviceFunctionParameter)* ARROW)? identifier PAREN_CLOSE
 ;
 serviceFunctionParameter:                   BRACE_OPEN lambdaParam BRACE_CLOSE
 ;

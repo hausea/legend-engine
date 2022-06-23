@@ -27,24 +27,24 @@ import meta::pure::mapping::*;
 
 import meta::pure::relational::crud::tests::*;
 
-function <<test.Test>> meta::pure::relational::crud::tests::testResolvedApplicationFromPath():Any[*]
-{
-  let resolvedInteractiveApplication = resolveInteractiveApplication('meta::pure::relational::crud::tests')->toOne();
-  meta::pure::relational::crud::tests::generateDatabase($resolvedInteractiveApplication);
-
-  let allFirms = $resolvedInteractiveApplication.queryClass.qualifiedProperties->filter(qp | $qp.name == 'allFirms');
-  
-  let debugContext = ^DebugContext(debug = false, space = '');
-  let executionContext = ^ExecutionContext();
-  let result = execute(
-    $allFirms->toOne()->cast(@FunctionDefinition<{->Any[*]}>),
-    $resolvedInteractiveApplication.mapping, 
-    $resolvedInteractiveApplication.runtime, 
-    $executionContext, meta::pure::router::extension::defaultRelationalExtensions(), 
-    $debugContext);
-  // print($result.values->size());
-  assertEquals(1, $result.values->size());
-}
+// function <<test.Test>> meta::pure::relational::crud::tests::testResolvedApplicationFromPath():Any[*]
+// {
+//   let resolvedInteractiveApplication = resolveInteractiveApplication('meta::pure::relational::crud::tests')->toOne();
+//   meta::pure::relational::crud::tests::generateDatabase($resolvedInteractiveApplication);
+//
+//   let allFirms = $resolvedInteractiveApplication.queryClass.qualifiedProperties->filter(qp | $qp.name == 'allFirms');
+//
+//   let debugContext = ^DebugContext(debug = false, space = '');
+//   let executionContext = ^ExecutionContext();
+//   let result = execute(
+//     $allFirms->toOne()->cast(@FunctionDefinition<{->Any[*]}>),
+//     $resolvedInteractiveApplication.mapping,
+//     $resolvedInteractiveApplication.runtime,
+//     $executionContext, meta::pure::router::extension::defaultRelationalExtensions(),
+//     $debugContext);
+//   // print($result.values->size());
+//   assertEquals(1, $result.values->size());
+// }
 
 function meta::pure::relational::crud::tests::generateDatabase(resolvedInteractiveApplication: ResolvedInteractiveApplication[1]):Any[*]
 {
@@ -90,12 +90,12 @@ function meta::pure::relational::crud::tests::buildApp(): InteractiveApplication
           )
         ],
         services = [
-          ^InteractiveService(
+          ^ReadInteractiveService(
             name = 'allFirms',
             authorization = [],
             query = |Firm.all()
           ),
-          ^InteractiveService(
+          ^ReadInteractiveService(
             name = 'firmById',
             authorization = [],
             query = id: Integer[1]|Firm.all()->filter(f | $f.id == $id)

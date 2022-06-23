@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Goldman Sachs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.finos.legend.engine.language.pure.dsl.interactive.compiler.toPureGraph;
 
 import org.eclipse.collections.api.RichIterable;
@@ -18,13 +34,42 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.co
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.type.primarykey.InteractiveTypePrimaryKeysConfiguration;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.type.primarykey.InteractiveTypePrimaryKeysPrimaryKeyConfiguration;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.CreateInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.DeleteInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.InteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.InteractiveServiceVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.ReadInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpdateInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpsertInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.InteractiveApplicationStore;
-import org.finos.legend.pure.generated.*;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.InteractiveApplicationStoreVisitor;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.RelationalInteractiveApplicationStore;
+import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_CreateInteractiveService_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_DeleteInteractiveService;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_DeleteInteractiveService_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveApplicationStore;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveAuthorization;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveAuthorization_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveService;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveType;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveTypeConfiguration;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveTypePrimaryKeysConfiguration;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveTypePrimaryKeysConfiguration_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveTypePrimaryKeysPrimaryKeyConfiguration;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveTypePrimaryKeysPrimaryKeyConfiguration_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveTypeStringPropertyConfiguration;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveTypeStringPropertyConfiguration_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_InteractiveType_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_ReadInteractiveService;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_ReadInteractiveService_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_UpdateInteractiveService;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_UpdateInteractiveService_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_UpsertInteractiveService;
+import org.finos.legend.pure.generated.Root_meta_pure_crud_metamodel_UpsertInteractiveService_Impl;
+import org.finos.legend.pure.generated.Root_meta_pure_relational_crud_metamodel_RelationalInteractiveApplicationStore_Impl;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.graphFetch.GraphFetchTree;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.graphFetch.RootGraphFetchTree;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.LambdaFunction;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.property.Property;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
@@ -49,13 +94,9 @@ public class HelperInteractiveApplicationBuilder
         return pureInteractiveAuthorization;
     }
 
-    public static Root_meta_pure_crud_metamodel_InteractiveApplicationStore buildStore(InteractiveApplicationStore store, CompileContext context)
+    public static Root_meta_pure_crud_metamodel_InteractiveApplicationStore buildStore(InteractiveApplicationStore store, List<InteractiveType> types, CompileContext context)
     {
-        Root_meta_pure_crud_metamodel_InteractiveApplicationStore pureStore = new Root_meta_pure_crud_metamodel_InteractiveApplicationStore_Impl("");
-//        pureStore._generateStore(buildLambda(store.generateStore, context));
-//        pureStore._generateMapping(buildLambda(store.generateMapping, context));
-        pureStore._connection(buildLambda(store.connection, context));
-        return pureStore;
+        return store.accept(new InteractiveApplicationStoreBuilder(context, types));
     }
 
     public static RichIterable<? extends Root_meta_pure_crud_metamodel_InteractiveType> buildTypes(List<InteractiveType> types, CompileContext context)
@@ -68,7 +109,10 @@ public class HelperInteractiveApplicationBuilder
                              pureInteractiveType._baseClass(baseClass);
 
                              // root graph fetch tree
-                             GraphFetchTree graphFetchTree = buildGraphFetchTree(type.graphScope, context, baseClass, Lists.mutable.empty(), new ProcessingContext(""));
+                             //TODO: AJH: need to add serialization support for graph fetch trees in studio - fake it for now
+                             org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.graph.RootGraphFetchTree graphScope = new org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.graph.RootGraphFetchTree();
+                             graphScope._class = type.baseClass;
+                             GraphFetchTree graphFetchTree = buildGraphFetchTree(graphScope, context, baseClass, Lists.mutable.empty(), new ProcessingContext(""));
                              pureInteractiveType._graphScope((RootGraphFetchTree<? extends Object>) graphFetchTree);
 
                              // configuration
@@ -93,6 +137,28 @@ public class HelperInteractiveApplicationBuilder
     private static Root_meta_pure_crud_metamodel_InteractiveService buildService(InteractiveService interactiveService, CompileContext context)
     {
         return interactiveService.accept(new InteractiveServiceBuilder(context));
+    }
+
+    private static class InteractiveApplicationStoreBuilder implements InteractiveApplicationStoreVisitor<Root_meta_pure_crud_metamodel_InteractiveApplicationStore>
+    {
+        private final CompileContext context;
+        private final List<InteractiveType> types;
+
+        private InteractiveApplicationStoreBuilder(CompileContext context, List<InteractiveType> types)
+        {
+            this.context = context;
+            this.types = types;
+        }
+
+        @Override
+        public Root_meta_pure_crud_metamodel_InteractiveApplicationStore visit(RelationalInteractiveApplicationStore val)
+        {
+            Root_meta_pure_crud_metamodel_InteractiveApplicationStore pureStore = new Root_meta_pure_relational_crud_metamodel_RelationalInteractiveApplicationStore_Impl("");
+//        pureStore._generateStore(buildLambda(store.generateStore, context));
+//        pureStore._generateMapping(buildLambda(store.generateMapping, context));
+            pureStore._connection(buildLambda(val.connection, this.context));
+            return pureStore;
+        }
     }
 
     private static class InteractiveTypeConfigurationBuilder implements InteractiveTypeConfigurationVisitor<Root_meta_pure_crud_metamodel_InteractiveTypeConfiguration>
@@ -190,27 +256,56 @@ public class HelperInteractiveApplicationBuilder
             this.context = context;
         }
 
-        @Override
-        public Root_meta_pure_crud_metamodel_InteractiveService visit(CreateInteractiveService val)
+        public <T extends Root_meta_pure_crud_metamodel_InteractiveService> T buildBaseInteractiveService(T pureService, InteractiveService protocolService)
         {
-            throw new UnsupportedOperationException("not yet supported.");
+            pureService._name(protocolService.name);
+            Root_meta_pure_crud_metamodel_InteractiveAuthorization pureInteractiveAuthorization = new Root_meta_pure_crud_metamodel_InteractiveAuthorization_Impl("");
+            pureInteractiveAuthorization._authorizationFunction(buildLambda(protocolService.authorization.authorizationFunction, this.context));
+            pureService._authorization(pureInteractiveAuthorization);
+            return pureService;
+        }
+
+        public LambdaFunction<?> buildQuery(Lambda lambda)
+        {
+            return buildLambda(lambda, this.context);
         }
 
         @Override
         public Root_meta_pure_crud_metamodel_InteractiveService visit(ReadInteractiveService val)
         {
-            Root_meta_pure_crud_metamodel_ReadInteractiveService pureReadService =
-                    new Root_meta_pure_crud_metamodel_ReadInteractiveService_Impl("");
-
-            pureReadService._name(val.name);
-
-            Root_meta_pure_crud_metamodel_InteractiveAuthorization pureInteractiveAuthorization = new Root_meta_pure_crud_metamodel_InteractiveAuthorization_Impl("");
-            pureInteractiveAuthorization._authorizationFunction(buildLambda(val.authorization.authorizationFunction, this.context));
-            pureReadService._authorization(pureInteractiveAuthorization);
-
-            pureReadService._query(buildLambda(val.query, this.context));
-
+            Root_meta_pure_crud_metamodel_ReadInteractiveService pureReadService = this.buildBaseInteractiveService(new Root_meta_pure_crud_metamodel_ReadInteractiveService_Impl(""), val);
+            pureReadService._query(this.buildQuery(val.query));
             return pureReadService;
+        }
+
+        @Override
+        public Root_meta_pure_crud_metamodel_InteractiveService visit(CreateInteractiveService val)
+        {
+            return this.buildBaseInteractiveService(new Root_meta_pure_crud_metamodel_CreateInteractiveService_Impl(""), val);
+        }
+
+        @Override
+        public Root_meta_pure_crud_metamodel_InteractiveService visit(UpdateInteractiveService val)
+        {
+            Root_meta_pure_crud_metamodel_UpdateInteractiveService pureUpdateService = this.buildBaseInteractiveService(new Root_meta_pure_crud_metamodel_UpdateInteractiveService_Impl(""), val);
+            pureUpdateService._query(this.buildQuery(val.query));
+            return pureUpdateService;
+        }
+
+        @Override
+        public Root_meta_pure_crud_metamodel_InteractiveService visit(UpsertInteractiveService val)
+        {
+            Root_meta_pure_crud_metamodel_UpsertInteractiveService pureUpsertService = this.buildBaseInteractiveService(new Root_meta_pure_crud_metamodel_UpsertInteractiveService_Impl(""), val);
+            pureUpsertService._query(this.buildQuery(val.query));
+            return pureUpsertService;
+        }
+
+        @Override
+        public Root_meta_pure_crud_metamodel_InteractiveService visit(DeleteInteractiveService val)
+        {
+            Root_meta_pure_crud_metamodel_DeleteInteractiveService pureDeleteService = this.buildBaseInteractiveService(new Root_meta_pure_crud_metamodel_DeleteInteractiveService_Impl(""), val);
+            pureDeleteService._query(this.buildQuery(val.query));
+            return pureDeleteService;
         }
     }
 }

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Goldman Sachs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.finos.legend.engine.language.pure.dsl.interactive.grammar.to;
 
 import org.eclipse.collections.impl.list.mutable.ListAdapter;
@@ -15,15 +31,21 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.co
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.type.InteractiveTypeTypeConfigurationVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.type.primarykey.InteractiveTypePrimaryKeysConfiguration;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.CreateInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.DeleteInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.InteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.InteractiveServiceVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.ReadInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpdateInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpsertInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.InteractiveApplicationStore;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.RelationalInteractiveApplicationStore;
+import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 
 import java.util.List;
 
-import static org.finos.legend.engine.language.pure.grammar.to.PureGrammarComposerUtility.*;
+import static org.finos.legend.engine.language.pure.grammar.to.PureGrammarComposerUtility.convertPath;
+import static org.finos.legend.engine.language.pure.grammar.to.PureGrammarComposerUtility.convertString;
+import static org.finos.legend.engine.language.pure.grammar.to.PureGrammarComposerUtility.getTabString;
 
 public class HelperInteractiveApplicationGrammarComposer
 {
@@ -136,22 +158,81 @@ public class HelperInteractiveApplicationGrammarComposer
             this.indentLevel = indentLevel;
         }
 
-        @Override
-        public String visit(CreateInteractiveService val)
+        private StringBuilder appendServiceBegin(StringBuilder stringBuilder, String name)
         {
-            throw new UnsupportedOperationException("not yet supported.");
+            stringBuilder.append(getTabString(this.indentLevel)).append("ReadService(").append(name).append(")\n");
+            stringBuilder.append(getTabString(this.indentLevel)).append("{\n");
+            return stringBuilder;
+        }
+
+        private StringBuilder appendAuthorization(StringBuilder stringBuilder)
+        {
+            return stringBuilder.append(getTabString(this.indentLevel + 1)).append("authorization: [None];\n");
+        }
+
+        private StringBuilder appendQuery(StringBuilder stringBuilder, Lambda lambda)
+        {
+            stringBuilder.append(getTabString(this.indentLevel + 1)).append("query: ");
+            stringBuilder.append("{").append(lambda.accept(DEPRECATED_PureGrammarComposerCore.Builder.newInstance().build())).append("};\n");
+            return stringBuilder;
+        }
+
+        private StringBuilder appendServiceEnd(StringBuilder stringBuilder)
+        {
+            return stringBuilder.append(getTabString(this.indentLevel)).append("}\n");
         }
 
         @Override
         public String visit(ReadInteractiveService val)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(getTabString(this.indentLevel)).append("ReadService(").append(val.name).append(")\n");
-            stringBuilder.append(getTabString(this.indentLevel)).append("{\n");
-            stringBuilder.append(getTabString(this.indentLevel + 1)).append("authorization: [None];\n");
-            stringBuilder.append(getTabString(this.indentLevel + 1)).append("query: ");
-            stringBuilder.append("{").append(val.query.accept(DEPRECATED_PureGrammarComposerCore.Builder.newInstance().build())).append("};\n");
-            stringBuilder.append(getTabString(this.indentLevel)).append("}\n");
+            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendAuthorization(stringBuilder);
+            this.appendQuery(stringBuilder, val.query);
+            this.appendServiceEnd(stringBuilder);
+            return stringBuilder.toString();
+        }
+
+        @Override
+        public String visit(CreateInteractiveService val)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendAuthorization(stringBuilder);
+            this.appendServiceEnd(stringBuilder);
+            return stringBuilder.toString();
+        }
+
+        @Override
+        public String visit(UpdateInteractiveService val)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendAuthorization(stringBuilder);
+            this.appendQuery(stringBuilder, val.query);
+            this.appendServiceEnd(stringBuilder);
+            return stringBuilder.toString();
+        }
+
+        @Override
+        public String visit(UpsertInteractiveService val)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendAuthorization(stringBuilder);
+            this.appendQuery(stringBuilder, val.query);
+            this.appendServiceEnd(stringBuilder);
+            return stringBuilder.toString();
+        }
+
+        @Override
+        public String visit(DeleteInteractiveService val)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendAuthorization(stringBuilder);
+            this.appendQuery(stringBuilder, val.query);
+            this.appendServiceEnd(stringBuilder);
             return stringBuilder.toString();
         }
     }

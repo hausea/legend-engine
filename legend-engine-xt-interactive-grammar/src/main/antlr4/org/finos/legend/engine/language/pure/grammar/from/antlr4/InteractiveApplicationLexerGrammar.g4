@@ -24,6 +24,18 @@ IN_MEMORY_STORE:                            'InMemory';
 RELATIONAL_TYPE:                            'type';
 RELATIONAL_TYPE_H2:                         'H2';
 
+RELATIONAL_DATASOURCE_SPEC:                 'specification';
+RELATIONAL_AUTH_STRATEGY:                   'auth';
+
+QUOTE_IDENTIFIERS:                      'quoteIdentifiers';
+
+BRACE_OPEN:                             '{' -> pushMode(SPECIFICATION_ISLAND_MODE);
+
+mode SPECIFICATION_ISLAND_MODE;
+SPECIFICATION_BRACE_OPEN: '{' -> pushMode (SPECIFICATION_ISLAND_MODE);
+SPECIFICATION_BRACE_CLOSE: '}' -> popMode;
+SPECIFICATION_CONTENT: (~[{}])+;
+
 // TYPES
 ROOT_TYPE:                                  'RootType';
 GRAPH_SCOPE:                                'graphScope';
@@ -37,5 +49,9 @@ STRING_LENGTH:                              'stringLength';
 
 // SERVICES
 READ_SERVICE:                               'ReadService';
+CREATE_SERVICE:                             'CreateService';
+UPDATE_SERVICE:                             'UpdateService';
+UPSERT_SERVICE:                             'UpsertService';
+DELETE_SERVICE:                             'DeleteService';
 AUTHORIZATION:                              'authorization';
 QUERY:                                      'query';

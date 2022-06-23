@@ -146,13 +146,13 @@ meta::pure::crud::metamodel::InteractiveService
   {doc.doc = 'The endpoint corresponding to this service.  Parameters are represented in brackets, e.g. /api/type/{id}'}
   name: String[1];
   authorization: InteractiveAuthorization[0..1];
-  query: LambdaFunction<Any>[1]; //LambdaFunction<{Any[*] -> Any[*]}>[1];
 }
 
 Class
 {doc.doc = 'A read-only interactive service.'}
 meta::pure::crud::metamodel::ReadInteractiveService extends InteractiveService
 {
+  query: LambdaFunction<Any>[1]; //LambdaFunction<{Any[*] -> Any[*]}>[1];
 }
 
 Class
@@ -160,6 +160,30 @@ Class
 meta::pure::crud::metamodel::CreateInteractiveService extends InteractiveService
 {
   writeScope: meta::pure::graphFetch::RootGraphFetchTree<Any>[1];
+}
+
+Class
+{doc.doc = 'An update interactive service.'}
+meta::pure::crud::metamodel::UpdateInteractiveService extends InteractiveService
+{
+  writeScope: meta::pure::graphFetch::RootGraphFetchTree<Any>[1];
+  query: LambdaFunction<Any>[1]; //LambdaFunction<{Any[*] -> Any[*]}>[1];
+}
+
+Class
+{doc.doc = 'An upsert interactive service.'}
+meta::pure::crud::metamodel::UpsertInteractiveService extends InteractiveService
+{
+  writeScope: meta::pure::graphFetch::RootGraphFetchTree<Any>[1];
+  query: LambdaFunction<Any>[1]; //LambdaFunction<{Any[*] -> Any[*]}>[1];
+}
+
+Class
+{doc.doc = 'A delete interactive service.'}
+meta::pure::crud::metamodel::DeleteInteractiveService extends InteractiveService
+{
+  writeScope: meta::pure::graphFetch::RootGraphFetchTree<Any>[1];
+  query: LambdaFunction<Any>[1]; //LambdaFunction<{Any[*] -> Any[*]}>[1];
 }
 
 Class

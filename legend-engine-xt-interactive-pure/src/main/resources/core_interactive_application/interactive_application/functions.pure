@@ -62,38 +62,173 @@ function <<access.private>> meta::pure::crud::functions::generateQueryClassForIn
 
 function <<access.private>> meta::pure::crud::functions::createServiceDerivedQueryProperties(queryClass: Class<Any>[1], interactiveApplication: InteractiveApplication[1]): QualifiedProperty<Any>[*]
 {
+  //TODO: AJH: properly configure the qualified property for the write services - the match expressions are just copy/paste for now
   $interactiveApplication.types->fold({type, properties| 
     $type.services->map(service | 
-      let responsePropertyType = $type.baseClass;
-      let multiplicity = ZeroMany;
-
-      let expressionSequence = $service.query.expressionSequence;
-      let servicePropertyTemplate = 
-        ^QualifiedProperty<Any>(
-          name = $service.name,
-          multiplicity = $multiplicity,
-          genericType = ^GenericType(rawType = $responsePropertyType),
-          owner = $queryClass,
-          expressionSequence = $expressionSequence
-        );
-
-      let serviceProperty = ^$servicePropertyTemplate(
-        classifierGenericType = ^GenericType(
-          rawType = QualifiedProperty,
-          typeArguments = [
-            ^GenericType(
-              rawType = ^FunctionType(
-                returnMultiplicity = $multiplicity,
-                returnType = ^GenericType(rawType = $responsePropertyType)
-              )
-            )
-          ]
-        )
-      )->evaluateAndDeactivate();
+      let serviceProperty = $service->match(
+        [
+          read:ReadInteractiveService[1] | createReadServiceQueryProperty($read, $type, $queryClass),
+          create:CreateInteractiveService[1] | createCreateServiceQueryProperty($create, $type, $queryClass),
+          update:UpdateInteractiveService[1] | createUpdateServiceQueryProperty($update, $type, $queryClass),
+          upsert:UpsertInteractiveService[1] | createUpsertServiceQueryProperty($upsert, $type, $queryClass),
+          delete:DeleteInteractiveService[1] | createDeleteServiceQueryProperty($delete, $type, $queryClass)
+        ]
+      );
       
       $properties->add($serviceProperty);
     )
   }, [])
+}
+
+function <<access.private>> meta::pure::crud::functions::createReadServiceQueryProperty(service: ReadInteractiveService[1], type: InteractiveType[1], queryClass: Class<Any>[1]): QualifiedProperty<Any>[1]
+{
+  let responsePropertyType = $type.baseClass;
+  let multiplicity = ZeroMany;
+
+  let expressionSequence = $service.query.expressionSequence;
+  let servicePropertyTemplate = 
+    ^QualifiedProperty<Any>(
+      name = $service.name,
+      multiplicity = $multiplicity,
+      genericType = ^GenericType(rawType = $responsePropertyType),
+      owner = $queryClass,
+      expressionSequence = $expressionSequence
+    );
+
+  ^$servicePropertyTemplate(
+    classifierGenericType = ^GenericType(
+      rawType = QualifiedProperty,
+      typeArguments = [
+        ^GenericType(
+          rawType = ^FunctionType(
+            returnMultiplicity = $multiplicity,
+            returnType = ^GenericType(rawType = $responsePropertyType)
+          )
+        )
+      ]
+    )
+  )->evaluateAndDeactivate();
+}
+
+function <<access.private>> meta::pure::crud::functions::createCreateServiceQueryProperty(service: CreateInteractiveService[1], type: InteractiveType[1], queryClass: Class<Any>[1]): QualifiedProperty<Any>[1]
+{
+  let responsePropertyType = $type.baseClass;
+  let multiplicity = ZeroMany;
+
+  let lambdaExpression = {|[$responsePropertyType->dynamicNew([])]};
+  let expressionSequence = $lambdaExpression.expressionSequence;
+  let servicePropertyTemplate = 
+    ^QualifiedProperty<Any>(
+      name = $service.name,
+      multiplicity = $multiplicity,
+      genericType = ^GenericType(rawType = $responsePropertyType),
+      owner = $queryClass,
+      expressionSequence = $expressionSequence
+    );
+
+  ^$servicePropertyTemplate(
+    classifierGenericType = ^GenericType(
+      rawType = QualifiedProperty,
+      typeArguments = [
+        ^GenericType(
+          rawType = ^FunctionType(
+            returnMultiplicity = $multiplicity,
+            returnType = ^GenericType(rawType = $responsePropertyType)
+          )
+        )
+      ]
+    )
+  )->evaluateAndDeactivate();
+}
+
+function <<access.private>> meta::pure::crud::functions::createUpdateServiceQueryProperty(service: UpdateInteractiveService[1], type: InteractiveType[1], queryClass: Class<Any>[1]): QualifiedProperty<Any>[1]
+{
+  let responsePropertyType = $type.baseClass;
+  let multiplicity = ZeroMany;
+
+  let expressionSequence = $service.query.expressionSequence;
+  let servicePropertyTemplate = 
+    ^QualifiedProperty<Any>(
+      name = $service.name,
+      multiplicity = $multiplicity,
+      genericType = ^GenericType(rawType = $responsePropertyType),
+      owner = $queryClass,
+      expressionSequence = $expressionSequence
+    );
+
+  ^$servicePropertyTemplate(
+    classifierGenericType = ^GenericType(
+      rawType = QualifiedProperty,
+      typeArguments = [
+        ^GenericType(
+          rawType = ^FunctionType(
+            returnMultiplicity = $multiplicity,
+            returnType = ^GenericType(rawType = $responsePropertyType)
+          )
+        )
+      ]
+    )
+  )->evaluateAndDeactivate();
+}
+
+function <<access.private>> meta::pure::crud::functions::createUpsertServiceQueryProperty(service: UpsertInteractiveService[1], type: InteractiveType[1], queryClass: Class<Any>[1]): QualifiedProperty<Any>[1]
+{
+  let responsePropertyType = $type.baseClass;
+  let multiplicity = ZeroMany;
+
+  let expressionSequence = $service.query.expressionSequence;
+  let servicePropertyTemplate = 
+    ^QualifiedProperty<Any>(
+      name = $service.name,
+      multiplicity = $multiplicity,
+      genericType = ^GenericType(rawType = $responsePropertyType),
+      owner = $queryClass,
+      expressionSequence = $expressionSequence
+    );
+
+  ^$servicePropertyTemplate(
+    classifierGenericType = ^GenericType(
+      rawType = QualifiedProperty,
+      typeArguments = [
+        ^GenericType(
+          rawType = ^FunctionType(
+            returnMultiplicity = $multiplicity,
+            returnType = ^GenericType(rawType = $responsePropertyType)
+          )
+        )
+      ]
+    )
+  )->evaluateAndDeactivate();
+}
+
+function <<access.private>> meta::pure::crud::functions::createDeleteServiceQueryProperty(service: DeleteInteractiveService[1], type: InteractiveType[1], queryClass: Class<Any>[1]): QualifiedProperty<Any>[1]
+{
+  let responsePropertyType = $type.baseClass;
+  let multiplicity = ZeroMany;
+
+  let expressionSequence = $service.query.expressionSequence;
+  let servicePropertyTemplate = 
+    ^QualifiedProperty<Any>(
+      name = $service.name,
+      multiplicity = $multiplicity,
+      genericType = ^GenericType(rawType = $responsePropertyType),
+      owner = $queryClass,
+      expressionSequence = $expressionSequence
+    );
+
+  ^$servicePropertyTemplate(
+    classifierGenericType = ^GenericType(
+      rawType = QualifiedProperty,
+      typeArguments = [
+        ^GenericType(
+          rawType = ^FunctionType(
+            returnMultiplicity = $multiplicity,
+            returnType = ^GenericType(rawType = $responsePropertyType)
+          )
+        )
+      ]
+    )
+  )->evaluateAndDeactivate();
 }
 
 function <<access.private>> meta::pure::crud::functions::generateRuntimeForInteractiveApplication(interactiveApplication: InteractiveApplication[1], store: meta::pure::store::Store[1]): Runtime[1]

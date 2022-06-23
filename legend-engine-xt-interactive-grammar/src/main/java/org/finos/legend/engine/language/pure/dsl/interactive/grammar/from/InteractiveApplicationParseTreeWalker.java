@@ -1,10 +1,30 @@
+/*
+ * Copyright 2022 Goldman Sachs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.finos.legend.engine.language.pure.dsl.interactive.grammar.from;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.eclipse.collections.api.block.function.Function0;
+import org.eclipse.collections.impl.list.mutable.ListAdapter;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.language.pure.grammar.from.ParseTreeWalkerSourceInformation;
 import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParser;
 import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParserUtility;
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.InteractiveApplicationParserGrammar;
+import org.finos.legend.engine.language.pure.grammar.from.antlr4.InteractiveApplicationParserGrammarBaseVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.InteractiveApplication;
@@ -16,11 +36,16 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.co
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.type.primarykey.InteractiveTypePrimaryKeysConfiguration;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.type.primarykey.InteractiveTypePrimaryKeysPrimaryKeyConfiguration;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.type.primarykey.PrimaryKeyStrategy;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.CreateInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.DeleteInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.InteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.ReadInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpdateInteractiveService;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpsertInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.InteractiveApplicationStore;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.RelationalInteractiveApplicationStore;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
+import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.graph.RootGraphFetchTree;
 
 import java.util.ArrayList;
@@ -45,7 +70,7 @@ public class InteractiveApplicationParseTreeWalker
     }
 
     /**********
-     * persistence
+     * interactive application
      **********/
 
     public void visit(InteractiveApplicationParserGrammar.DefinitionContext ctx)
@@ -122,8 +147,11 @@ public class InteractiveApplicationParseTreeWalker
         //TODO: AJH: add support for other relational stores
         if (relationalTypeContext.relationalTypeOption().RELATIONAL_TYPE_H2() != null)
         {
+            //TODO: AJH: use the xt relational specification instead
+//            interactiveApplicationStore.connection =
+//                    this.pureGrammarParser.parseLambda("{store: meta::pure::store::Store[1]|^meta::relational::runtime::TestDatabaseConnection(element = $store, type = meta::relational::runtime::DatabaseType.H2)}");
             interactiveApplicationStore.connection =
-                    this.pureGrammarParser.parseLambda("{store: meta::pure::store::Store[1]|^meta::relational::runtime::TestDatabaseConnection(element = $store, type = meta::relational::runtime::DatabaseType.H2)}");
+                    this.pureGrammarParser.parseLambda(("{store: meta::pure::store::Store[1]|^meta::pure::alloy::connections::RelationalDatabaseConnection(type = meta::relational::runtime::DatabaseType.H2, element = $store, datasourceSpecification = ^meta::pure::alloy::connections::alloy::specification::LocalH2DatasourceSpecification(testDataSetupSqls = ['DROP TABLE IF EXISTS FIRM;CREATE TABLE FIRM (ID INTEGER PRIMARY KEY, NAME VARCHAR(256));INSERT INTO FIRM (ID, NAME) VALUES (1, \\'GS\\');INSERT INTO FIRM (ID, NAME) VALUES (2, \\'Tesla\\');INSERT INTO FIRM (ID, NAME) VALUES (3, \\'QCSP\\');']), authenticationStrategy = ^meta::pure::alloy::connections::alloy::authentication::TestDatabaseAuthenticationStrategy())}"));
 
             return interactiveApplicationStore;
         }
@@ -155,36 +183,7 @@ public class InteractiveApplicationParseTreeWalker
 
     private List<InteractiveService> visitTypeServices(InteractiveApplicationParserGrammar.RootTypeContext typeContext)
     {
-        List<InteractiveService> services = new ArrayList<>(0);
-
-        // read services
-        services.addAll(
-                typeContext
-                        .service()
-                        .stream()
-                        .flatMap(serviceContext -> serviceContext.readService().stream())
-                        .map(this::visitReadTypeService)
-                        .collect(Collectors.toList()));
-
-        return services;
-    }
-
-    private ReadInteractiveService visitReadTypeService(InteractiveApplicationParserGrammar.ReadServiceContext readService)
-    {
-        SourceInformation sourceInformation = this.walkerSourceInformation.getSourceInformation(readService);
-
-        ReadInteractiveService readInteractiveService = new ReadInteractiveService();
-        readInteractiveService.name = readService.identifier().getText();
-
-        // authorization
-        InteractiveApplicationParserGrammar.AuthorizationContext authorization = PureGrammarParserUtility.validateAndExtractOptionalField(readService.authorization(), "authorization", sourceInformation);
-        readInteractiveService.authorization = this.visitInteractiveAuthorization(authorization);
-
-        // query
-        InteractiveApplicationParserGrammar.QueryContext queryContext = PureGrammarParserUtility.validateAndExtractOptionalField(readService.query(), "query", sourceInformation);
-        readInteractiveService.query = this.pureGrammarParser.parseLambda(queryContext.lambdaFunction().getText());
-
-        return readInteractiveService;
+        return ListAdapter.adapt(typeContext.service()).collectWith(InteractiveApplicationParserGrammar.ServiceContext::accept, new ParseInteractiveServiceVisitor());
     }
 
     private InteractiveAuthorization visitInteractiveAuthorization(InteractiveApplicationParserGrammar.AuthorizationContext authorizationContext)
@@ -257,5 +256,92 @@ public class InteractiveApplicationParseTreeWalker
                          stringLengthConfiguration.minLength = 0;
                          return stringLengthConfiguration;
                      }).collect(Collectors.toList());
+    }
+
+    private class ParseInteractiveServiceVisitor extends InteractiveApplicationParserGrammarBaseVisitor<InteractiveService>
+    {
+        private <T extends InteractiveService> T parseBaseService(
+                T interactiveService,
+                ParserRuleContext serviceContext,
+                Function0<InteractiveApplicationParserGrammar.ServiceDescriptionContext> serviceDescriptionContextFunction0,
+                Function0<List<InteractiveApplicationParserGrammar.AuthorizationContext>> authorizationContextFunction0)
+        {
+            SourceInformation sourceInformation = InteractiveApplicationParseTreeWalker.this.walkerSourceInformation.getSourceInformation(serviceContext);
+
+            interactiveService.name = serviceDescriptionContextFunction0.value().identifier().getText();
+
+            // authorization
+            InteractiveApplicationParserGrammar.AuthorizationContext authorization = PureGrammarParserUtility.validateAndExtractOptionalField(authorizationContextFunction0.value(), "authorization", sourceInformation);
+            interactiveService.authorization = InteractiveApplicationParseTreeWalker.this.visitInteractiveAuthorization(authorization);
+
+            return interactiveService;
+        }
+
+        private Lambda parseQuery(ParserRuleContext serviceContext, List<InteractiveApplicationParserGrammar.QueryContext> queryContexts)
+        {
+            SourceInformation sourceInformation = InteractiveApplicationParseTreeWalker.this.walkerSourceInformation.getSourceInformation(serviceContext);
+
+            InteractiveApplicationParserGrammar.QueryContext queryContext = PureGrammarParserUtility.validateAndExtractRequiredField(queryContexts, "query", sourceInformation);
+            return InteractiveApplicationParseTreeWalker.this.pureGrammarParser.parseLambda(queryContext.lambdaFunction().getText());
+        }
+
+        @Override
+        public InteractiveService visitReadService(InteractiveApplicationParserGrammar.ReadServiceContext ctx)
+        {
+            ReadInteractiveService readInteractiveService = this.parseBaseService(
+                    new ReadInteractiveService(),
+                    ctx,
+                    ctx::serviceDescription,
+                    ctx::authorization);
+            readInteractiveService.query = this.parseQuery(ctx, ctx.query());
+            return readInteractiveService;
+        }
+
+        @Override
+        public InteractiveService visitCreateService(InteractiveApplicationParserGrammar.CreateServiceContext ctx)
+        {
+            CreateInteractiveService createInteractiveService = this.parseBaseService(
+                    new CreateInteractiveService(),
+                    ctx,
+                    ctx::serviceDescription,
+                    ctx::authorization);
+            return createInteractiveService;
+        }
+
+        @Override
+        public InteractiveService visitUpdateService(InteractiveApplicationParserGrammar.UpdateServiceContext ctx)
+        {
+            UpdateInteractiveService updateInteractiveService = this.parseBaseService(
+                    new UpdateInteractiveService(),
+                    ctx,
+                    ctx::serviceDescription,
+                    ctx::authorization);
+            updateInteractiveService.query = this.parseQuery(ctx, ctx.query());
+            return updateInteractiveService;
+        }
+
+        @Override
+        public InteractiveService visitUpsertService(InteractiveApplicationParserGrammar.UpsertServiceContext ctx)
+        {
+            UpsertInteractiveService upsertInteractiveService = this.parseBaseService(
+                    new UpsertInteractiveService(),
+                    ctx,
+                    ctx::serviceDescription,
+                    ctx::authorization);
+            upsertInteractiveService.query = this.parseQuery(ctx, ctx.query());
+            return upsertInteractiveService;
+        }
+
+        @Override
+        public InteractiveService visitDeleteService(InteractiveApplicationParserGrammar.DeleteServiceContext ctx)
+        {
+            DeleteInteractiveService deleteInteractiveService = this.parseBaseService(
+                    new DeleteInteractiveService(),
+                    ctx,
+                    ctx::serviceDescription,
+                    ctx::authorization);
+            deleteInteractiveService.query = this.parseQuery(ctx, ctx.query());
+            return deleteInteractiveService;
+        }
     }
 }

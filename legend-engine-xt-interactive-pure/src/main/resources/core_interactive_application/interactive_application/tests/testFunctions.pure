@@ -59,12 +59,12 @@ function meta::pure::crud::tests::buildApp(): InteractiveApplication[1]
           )
         ],
         services = [
-          ^InteractiveService(
+          ^ReadInteractiveService(
             name = 'allFirms',
             authorization = [],
             query = |Firm.all()
           ),
-          ^InteractiveService(
+          ^ReadInteractiveService(
             name = 'firmById',
             authorization = [],
             query = id: Integer[1]|Firm.all()->filter(f | $f.id == $id)
