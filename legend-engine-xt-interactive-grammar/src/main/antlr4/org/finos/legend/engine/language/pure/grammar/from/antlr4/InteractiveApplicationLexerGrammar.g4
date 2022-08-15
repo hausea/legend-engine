@@ -27,14 +27,7 @@ RELATIONAL_TYPE_H2:                         'H2';
 RELATIONAL_DATASOURCE_SPEC:                 'specification';
 RELATIONAL_AUTH_STRATEGY:                   'auth';
 
-QUOTE_IDENTIFIERS:                      'quoteIdentifiers';
-
-BRACE_OPEN:                             '{' -> pushMode(SPECIFICATION_ISLAND_MODE);
-
-mode SPECIFICATION_ISLAND_MODE;
-SPECIFICATION_BRACE_OPEN: '{' -> pushMode (SPECIFICATION_ISLAND_MODE);
-SPECIFICATION_BRACE_CLOSE: '}' -> popMode;
-SPECIFICATION_CONTENT: (~[{}])+;
+QUOTE_IDENTIFIERS:                          'quoteIdentifiers';
 
 // TYPES
 ROOT_TYPE:                                  'RootType';

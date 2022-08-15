@@ -44,7 +44,9 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.se
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpsertInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.InteractiveApplicationStore;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.RelationalInteractiveApplicationStore;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
+import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.graph.RootGraphFetchTree;
 
@@ -270,6 +272,18 @@ public class InteractiveApplicationParseTreeWalker
 
             interactiveService.name = serviceDescriptionContextFunction0.value().identifier().getText();
 
+            interactiveService.parameters = ListAdapter.adapt(serviceDescriptionContextFunction0.value().lambdaParam())
+                    .collect(lambdaParam ->
+                             {
+                                 Variable variable = new Variable();
+                                 InteractiveApplicationParserGrammar.LambdaParamTypeContext lambdaParamTypeContext = lambdaParam.lambdaParamType();
+                                 variable.multiplicity = this.buildMultiplicity(lambdaParamTypeContext.multiplicity().multiplicityArgument());
+                                 variable._class = lambdaParamTypeContext.type().getText();
+                                 variable.sourceInformation = walkerSourceInformation.getSourceInformation(lambdaParamTypeContext.type());
+                                 variable.name = PureGrammarParserUtility.fromIdentifier(lambdaParam.identifier());
+                                 return variable;
+                             });
+
             // authorization
             InteractiveApplicationParserGrammar.AuthorizationContext authorization = PureGrammarParserUtility.validateAndExtractOptionalField(authorizationContextFunction0.value(), "authorization", sourceInformation);
             interactiveService.authorization = InteractiveApplicationParseTreeWalker.this.visitInteractiveAuthorization(authorization);
@@ -283,6 +297,31 @@ public class InteractiveApplicationParseTreeWalker
 
             InteractiveApplicationParserGrammar.QueryContext queryContext = PureGrammarParserUtility.validateAndExtractRequiredField(queryContexts, "query", sourceInformation);
             return InteractiveApplicationParseTreeWalker.this.pureGrammarParser.parseLambda(queryContext.lambdaFunction().getText());
+        }
+
+        //TODO: AJH: straight copy from DomainParserTreeWalker
+        private Multiplicity buildMultiplicity(InteractiveApplicationParserGrammar.MultiplicityArgumentContext ctx)
+        {
+            Multiplicity m = new Multiplicity();
+            String star = "*";
+            if (ctx.fromMultiplicity() == null)
+            {
+                m.lowerBound = Integer.parseInt(star.equals(ctx.toMultiplicity().getText()) ? "0" : ctx.toMultiplicity().getText());
+            }
+            else
+            {
+                m.lowerBound = Integer.parseInt(ctx.fromMultiplicity().getText());
+            }
+
+            if (!star.equals(ctx.toMultiplicity().getText()))
+            {
+                m.setUpperBound(Integer.parseInt(ctx.toMultiplicity().getText()));
+            }
+            else
+            {
+                m.setUpperBound(null);
+            }
+            return m;
         }
 
         @Override
@@ -300,12 +339,11 @@ public class InteractiveApplicationParseTreeWalker
         @Override
         public InteractiveService visitCreateService(InteractiveApplicationParserGrammar.CreateServiceContext ctx)
         {
-            CreateInteractiveService createInteractiveService = this.parseBaseService(
+            return this.parseBaseService(
                     new CreateInteractiveService(),
                     ctx,
                     ctx::serviceDescription,
                     ctx::authorization);
-            return createInteractiveService;
         }
 
         @Override

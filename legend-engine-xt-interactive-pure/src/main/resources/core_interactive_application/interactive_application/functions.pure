@@ -102,6 +102,7 @@ function <<access.private>> meta::pure::crud::functions::createReadServiceQueryP
         ^GenericType(
           rawType = ^FunctionType(
             returnMultiplicity = $multiplicity,
+            parameters = $service.parameters,
             returnType = ^GenericType(rawType = $responsePropertyType)
           )
         )
@@ -115,7 +116,7 @@ function <<access.private>> meta::pure::crud::functions::createCreateServiceQuer
   let responsePropertyType = $type.baseClass;
   let multiplicity = ZeroMany;
 
-  let lambdaExpression = {|[$responsePropertyType->dynamicNew([])]};
+  let lambdaExpression = {|[]};
   let expressionSequence = $lambdaExpression.expressionSequence;
   let servicePropertyTemplate = 
     ^QualifiedProperty<Any>(
@@ -133,6 +134,7 @@ function <<access.private>> meta::pure::crud::functions::createCreateServiceQuer
         ^GenericType(
           rawType = ^FunctionType(
             returnMultiplicity = $multiplicity,
+            parameters = $service.parameters,
             returnType = ^GenericType(rawType = $responsePropertyType)
           )
         )
@@ -163,6 +165,7 @@ function <<access.private>> meta::pure::crud::functions::createUpdateServiceQuer
         ^GenericType(
           rawType = ^FunctionType(
             returnMultiplicity = $multiplicity,
+            parameters = $service.parameters,
             returnType = ^GenericType(rawType = $responsePropertyType)
           )
         )
@@ -193,6 +196,7 @@ function <<access.private>> meta::pure::crud::functions::createUpsertServiceQuer
         ^GenericType(
           rawType = ^FunctionType(
             returnMultiplicity = $multiplicity,
+            parameters = $service.parameters,
             returnType = ^GenericType(rawType = $responsePropertyType)
           )
         )
@@ -223,6 +227,7 @@ function <<access.private>> meta::pure::crud::functions::createDeleteServiceQuer
         ^GenericType(
           rawType = ^FunctionType(
             returnMultiplicity = $multiplicity,
+            parameters = $service.parameters,
             returnType = ^GenericType(rawType = $responsePropertyType)
           )
         )

@@ -62,9 +62,9 @@ specification:                              specificationType (specificationValu
 ;
 specificationType:                          VALID_STRING
 ;
-specificationValueBody:                     BRACE_OPEN (specificationValue)*
+specificationValueBody:                     ISLAND_OPEN (specificationValue)*
 ;
-specificationValue:                         SPECIFICATION_BRACE_OPEN | SPECIFICATION_CONTENT | SPECIFICATION_BRACE_CLOSE
+specificationValue:                         ISLAND_START | ISLAND_BRACE_OPEN | ISLAND_CONTENT | ISLAND_HASH | ISLAND_BRACE_CLOSE | ISLAND_END
 ;
 
 
@@ -92,7 +92,7 @@ stringLength:                               STRING_LENGTH COLON identifier ARROW
 ;
 stringLengthValue:                          INTEGER
 ;
-service:                                    (readService | createService | updateService | upsertService | deleteService)+
+service:                                    readService | createService | updateService | upsertService | deleteService
 ;
 readService:                                READ_SERVICE serviceDescription
                                                 BRACE_OPEN
@@ -105,7 +105,8 @@ readService:                                READ_SERVICE serviceDescription
 createService:                              CREATE_SERVICE serviceDescription
                                                 BRACE_OPEN
                                                     (
-                                                        authorization
+                                                        authorization |
+                                                        query
                                                     )*
                                                 BRACE_CLOSE
 ;
@@ -133,9 +134,7 @@ deleteService:                              DELETE_SERVICE serviceDescription
                                                     )*
                                                 BRACE_CLOSE
 ;
-serviceDescription:                         PAREN_OPEN (serviceFunctionParameter (COMMA serviceFunctionParameter)* ARROW)? identifier PAREN_CLOSE
-;
-serviceFunctionParameter:                   BRACE_OPEN lambdaParam BRACE_CLOSE
+serviceDescription:                         PAREN_OPEN (lambdaParam (COMMA lambdaParam)* ARROW)? identifier PAREN_CLOSE
 ;
 authorization:                              AUTHORIZATION COLON BRACKET_OPEN (identifier|NONE) (COMMA identifier)* BRACKET_CLOSE SEMI_COLON
 ;

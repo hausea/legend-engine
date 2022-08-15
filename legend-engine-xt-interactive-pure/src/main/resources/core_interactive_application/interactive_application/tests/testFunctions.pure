@@ -62,11 +62,13 @@ function meta::pure::crud::tests::buildApp(): InteractiveApplication[1]
           ^ReadInteractiveService(
             name = 'allFirms',
             authorization = [],
+            parameters = [],
             query = |Firm.all()
           ),
           ^ReadInteractiveService(
             name = 'firmById',
             authorization = [],
+            parameters = [^VariableExpression(name = 'id', genericType = ^GenericType(rawType = Integer), multiplicity = PureOne)],
             query = id: Integer[1]|Firm.all()->filter(f | $f.id == $id)
           )      
         ]

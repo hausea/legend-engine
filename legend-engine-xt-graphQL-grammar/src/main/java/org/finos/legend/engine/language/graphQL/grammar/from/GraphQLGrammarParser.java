@@ -61,8 +61,10 @@ import org.finos.legend.engine.protocol.graphQL.metamodel.value.BooleanValue;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.EnumValue;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.FloatValue;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.IntValue;
+import org.finos.legend.engine.protocol.graphQL.metamodel.value.ObjectKeyValue;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.ListValue;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.NullValue;
+import org.finos.legend.engine.protocol.graphQL.metamodel.value.ObjectValue;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.StringValue;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.Value;
 import org.finos.legend.engine.protocol.graphQL.metamodel.value.Variable;
@@ -70,6 +72,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
 
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class GraphQLGrammarParser
 {
@@ -491,6 +494,23 @@ public class GraphQLGrammarParser
             ListValue listValue = new ListValue();
             listValue.values = ListIterate.collect(valueContext.listValue().value(), this::visitValue);
             return listValue;
+        }
+        if (valueContext.objectValue() != null)
+        {
+            ObjectValue objectValue = new ObjectValue();
+            objectValue.values = valueContext
+                    .objectValue()
+                    .objectField()
+                    .stream()
+                    .map(of ->
+                         {
+                             ObjectKeyValue keyValue = new ObjectKeyValue();
+                             keyValue.name = of.name().getText();
+                             keyValue.value = this.visitValue(of.value());
+                             return keyValue;
+                         })
+                    .collect(Collectors.toList());
+            return objectValue;
         }
         throw new RuntimeException("Error");
     }

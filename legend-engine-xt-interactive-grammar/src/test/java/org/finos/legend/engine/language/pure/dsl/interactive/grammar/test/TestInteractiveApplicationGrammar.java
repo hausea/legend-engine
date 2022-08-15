@@ -28,7 +28,7 @@ public interface TestInteractiveApplicationGrammar
                 "    type: H2;\n" +
                 "  }\n" +
                 "  globalAuthorization: [None];\n" +
-                "  RootType(meta::demo::crud::Firm)\n" +
+                "  RootType(Firm)\n" +
                 "  {\n" +
                 "    graphScope: ();\n" +
                 "    primaryKey: id -> NONE;\n" +
@@ -38,7 +38,27 @@ public interface TestInteractiveApplicationGrammar
                 "      authorization: [None];\n" +
                 "      query: {|Firm.all()};\n" +
                 "    }\n" +
-                "    ReadService(firmById)\n" +
+                "    ReadService(id: Integer[1] -> firmById)\n" +
+                "    {\n" +
+                "      authorization: [None];\n" +
+                "      query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};\n" +
+                "    }\n" +
+                "    CreateService(firm: Firm[1] -> createFirm)\n" +
+                "    {\n" +
+                "      authorization: [None];\n" +
+                "      query: {|[]->cast(@Firm)};\n" +
+                "    }\n" +
+                "    UpdateService(id: Integer[1], firm: Firm[1] -> updateFirm)\n" +
+                "    {\n" +
+                "      authorization: [None];\n" +
+                "      query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};\n" +
+                "    }\n" +
+                "    UpsertService(id: Integer[1], firm: Firm[1] -> upsertFirm)\n" +
+                "    {\n" +
+                "      authorization: [None];\n" +
+                "      query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};\n" +
+                "    }\n" +
+                "    DeleteService(id: Integer[1] -> deleteFirm)\n" +
                 "    {\n" +
                 "      authorization: [None];\n" +
                 "      query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};\n" +
@@ -66,26 +86,27 @@ Application(meta::demo::crud::DemoApp)
       authorization: [None];
       query: {|Firm.all()};
     }
-    ReadService(firmById)
+    ReadService(id: Integer[1] -> firmById)
     {
       authorization: [None];
       query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};
     }
-    CreateService(createFirm)
+    CreateService(firm: Firm[1] -> createFirm)
     {
       authorization: [None];
+      query: {|[]};
     }
-    UpdateService(updateFirm)
-    {
-      authorization: [None];
-      query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};
-    }
-    UpsertService(upsertFirm)
+    UpdateService(id: Integer[1], firm: Firm[1] -> updateFirm)
     {
       authorization: [None];
       query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};
     }
-    DeleteService(DeleteFirm)
+    UpsertService(id: Integer[1], firm: Firm[1] -> upsertFirm)
+    {
+      authorization: [None];
+      query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};
+    }
+    DeleteService(id: Integer[1] -> deleteFirm)
     {
       authorization: [None];
       query: {id: Integer[1]|Firm.all()->filter(f|$f.id == $id)};

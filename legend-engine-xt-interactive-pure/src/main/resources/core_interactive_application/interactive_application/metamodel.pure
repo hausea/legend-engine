@@ -145,6 +145,7 @@ meta::pure::crud::metamodel::InteractiveService
 {
   {doc.doc = 'The endpoint corresponding to this service.  Parameters are represented in brackets, e.g. /api/type/{id}'}
   name: String[1];
+  parameters: VariableExpression[*];
   authorization: InteractiveAuthorization[0..1];
 }
 

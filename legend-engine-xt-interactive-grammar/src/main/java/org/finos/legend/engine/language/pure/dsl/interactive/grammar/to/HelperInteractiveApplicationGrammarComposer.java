@@ -18,6 +18,7 @@ package org.finos.legend.engine.language.pure.dsl.interactive.grammar.to;
 
 import org.eclipse.collections.impl.list.mutable.ListAdapter;
 import org.finos.legend.engine.language.pure.grammar.to.DEPRECATED_PureGrammarComposerCore;
+import org.finos.legend.engine.language.pure.grammar.to.HelperDomainGrammarComposer;
 import org.finos.legend.engine.language.pure.grammar.to.PureGrammarComposerContext;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.InteractiveApplication;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.InteractiveType;
@@ -39,6 +40,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.se
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.service.UpsertInteractiveService;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.InteractiveApplicationStore;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.store.RelationalInteractiveApplicationStore;
+import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 
 import java.util.List;
@@ -158,10 +160,26 @@ public class HelperInteractiveApplicationGrammarComposer
             this.indentLevel = indentLevel;
         }
 
-        private StringBuilder appendServiceBegin(StringBuilder stringBuilder, String name)
+        private StringBuilder appendServiceDefinition(StringBuilder stringBuilder, InteractiveService interactiveService)
         {
-            stringBuilder.append(getTabString(this.indentLevel)).append("ReadService(").append(name).append(")\n");
+            stringBuilder.append(getTabString(this.indentLevel)).append(interactiveService.accept(new InteractiveServiceNameComposer()));
+            stringBuilder.append("(");
+            this.appendServiceParameters(stringBuilder, interactiveService.parameters);
+            stringBuilder.append(interactiveService.name).append(")\n");
             stringBuilder.append(getTabString(this.indentLevel)).append("{\n");
+            return stringBuilder;
+        }
+
+        private StringBuilder appendServiceParameters(StringBuilder stringBuilder, List<Variable> parameters)
+        {
+            if (parameters != null && !parameters.isEmpty())
+            {
+                String variableString =
+                        ListAdapter.adapt(parameters)
+                                .collect(variable -> variable.name + ": " + variable._class + "[" + HelperDomainGrammarComposer.renderMultiplicity(variable.multiplicity) + "]")
+                                .makeString(", ");
+                stringBuilder.append(variableString).append(" -> ");
+            }
             return stringBuilder;
         }
 
@@ -186,7 +204,7 @@ public class HelperInteractiveApplicationGrammarComposer
         public String visit(ReadInteractiveService val)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendServiceDefinition(stringBuilder, val);
             this.appendAuthorization(stringBuilder);
             this.appendQuery(stringBuilder, val.query);
             this.appendServiceEnd(stringBuilder);
@@ -197,7 +215,7 @@ public class HelperInteractiveApplicationGrammarComposer
         public String visit(CreateInteractiveService val)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendServiceDefinition(stringBuilder, val);
             this.appendAuthorization(stringBuilder);
             this.appendServiceEnd(stringBuilder);
             return stringBuilder.toString();
@@ -207,7 +225,7 @@ public class HelperInteractiveApplicationGrammarComposer
         public String visit(UpdateInteractiveService val)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendServiceDefinition(stringBuilder, val);
             this.appendAuthorization(stringBuilder);
             this.appendQuery(stringBuilder, val.query);
             this.appendServiceEnd(stringBuilder);
@@ -218,7 +236,7 @@ public class HelperInteractiveApplicationGrammarComposer
         public String visit(UpsertInteractiveService val)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendServiceDefinition(stringBuilder, val);
             this.appendAuthorization(stringBuilder);
             this.appendQuery(stringBuilder, val.query);
             this.appendServiceEnd(stringBuilder);
@@ -229,11 +247,44 @@ public class HelperInteractiveApplicationGrammarComposer
         public String visit(DeleteInteractiveService val)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            this.appendServiceBegin(stringBuilder, val.name);
+            this.appendServiceDefinition(stringBuilder, val);
             this.appendAuthorization(stringBuilder);
             this.appendQuery(stringBuilder, val.query);
             this.appendServiceEnd(stringBuilder);
             return stringBuilder.toString();
+        }
+    }
+
+    private static class InteractiveServiceNameComposer implements InteractiveServiceVisitor<String>
+    {
+        @Override
+        public String visit(ReadInteractiveService val)
+        {
+            return "ReadService";
+        }
+
+        @Override
+        public String visit(CreateInteractiveService val)
+        {
+            return "CreateService";
+        }
+
+        @Override
+        public String visit(UpdateInteractiveService val)
+        {
+            return "UpdateService";
+        }
+
+        @Override
+        public String visit(UpsertInteractiveService val)
+        {
+            return "UpsertService";
+        }
+
+        @Override
+        public String visit(DeleteInteractiveService val)
+        {
+            return "DeleteService";
         }
     }
 }

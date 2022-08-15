@@ -64,6 +64,8 @@
         <module>legend-engine-xt-interactive-pure</module>
         <module>legend-engine-xt-interactive-grammar</module>
 
+        <module>legend-engine-xt-write-protocol</module>
+
         <module>legend-engine-xt-serviceStore-executionPlan</module>
         <module>legend-engine-xt-serviceStore-protocol</module>
         <module>legend-engine-xt-serviceStore-grammar</module>
@@ -182,6 +184,7 @@
         <module>legend-engine-testable</module>
         <module>legend-engine-executionPlan-execution-authorizer</module>
         <module>legend-engine-xt-relationalStore-executionPlan-authorizer</module>
+        <module>legend-engine-xt-write-relational</module>
     </modules>
 
     <properties>
@@ -911,6 +914,18 @@
                 <artifactId>legend-engine-xt-interactive-grammar</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-write-protocol</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-write-relational</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-avro</artifactId>

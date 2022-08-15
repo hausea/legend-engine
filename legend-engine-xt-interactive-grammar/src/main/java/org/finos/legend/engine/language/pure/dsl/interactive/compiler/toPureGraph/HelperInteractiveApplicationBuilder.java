@@ -20,8 +20,10 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.list.mutable.ListAdapter;
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.CompileContext;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.ProcessingContext;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.ValueSpecificationBuilder;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.InteractiveType;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.authorization.InteractiveAuthorization;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.configuration.InteractiveTypeConfiguration;
@@ -73,6 +75,7 @@ import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.Lambda
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.property.Property;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.valuespecification.VariableExpression;
 
 import java.util.List;
 
@@ -259,6 +262,10 @@ public class HelperInteractiveApplicationBuilder
         public <T extends Root_meta_pure_crud_metamodel_InteractiveService> T buildBaseInteractiveService(T pureService, InteractiveService protocolService)
         {
             pureService._name(protocolService.name);
+            if (protocolService.parameters != null && !protocolService.parameters.isEmpty())
+            {
+                pureService._parameters(ListIterate.collect(protocolService.parameters, p -> (VariableExpression) p.accept(new ValueSpecificationBuilder(context, Lists.mutable.empty(), new ProcessingContext("build service parameter")))));
+            }
             Root_meta_pure_crud_metamodel_InteractiveAuthorization pureInteractiveAuthorization = new Root_meta_pure_crud_metamodel_InteractiveAuthorization_Impl("");
             pureInteractiveAuthorization._authorizationFunction(buildLambda(protocolService.authorization.authorizationFunction, this.context));
             pureService._authorization(pureInteractiveAuthorization);

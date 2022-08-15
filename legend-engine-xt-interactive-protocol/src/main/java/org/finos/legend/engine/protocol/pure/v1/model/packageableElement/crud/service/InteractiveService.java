@@ -18,7 +18,12 @@ package org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.s
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.eclipse.collections.impl.factory.Lists;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.authorization.InteractiveAuthorization;
+import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
+
+import java.util.Collections;
+import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "_type")
 @JsonSubTypes({
@@ -31,6 +36,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.crud.au
 public abstract class InteractiveService
 {
     public String name;
+    public List<Variable> parameters = Collections.emptyList();
     public InteractiveAuthorization authorization;
 
     public abstract <T> T accept(InteractiveServiceVisitor<T> visitor);
