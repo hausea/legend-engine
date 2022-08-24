@@ -206,6 +206,20 @@ function meta::external::query::graphQL::transformation::queryToPure::getGraphFe
 import meta::external::query::graphQL::transformation::mutationToPure::*;
 import meta::external::query::graphQL::metamodel::executable::*;
 
+function meta::external::query::graphQL::transformation::mutationToPure::executeQueryClassProperty(qp: QualifiedProperty<Any>[1], arguments: Map<String, meta::json::JSONElement>[1]): Any[*]
+{
+  $qp;
+  // let debugContext = ^DebugContext(debug = false, space = '');
+  // let executionContext = ^ExecutionContext();
+  // let result = execute(
+  //   $allFirms->toOne()->cast(@FunctionDefinition<{->Any[*]}>),
+  //   $resolvedInteractiveApplication.mapping,
+  //   $resolvedInteractiveApplication.runtime,
+  //   $executionContext, 
+  //   meta::pure::router::extension::defaultRelationalExtensions(),
+  //   $debugContext);
+}
+
 // function meta::external::query::graphQL::transformation::mutationToPure::graphQLDocumentToPure(cl: Class<Any>[1], query: meta::external::query::graphQL::metamodel::Document[1]): Pair<AbstractProperty<Any>, Map<String, Any>>[*]
 function meta::external::query::graphQL::transformation::mutationToPure::graphQLDocumentToPure(cl: Class<Any>[1], query: meta::external::query::graphQL::metamodel::Document[1]): Pair<AbstractProperty<Any>, Map<String, meta::json::JSONElement>>[*]
 {
@@ -266,14 +280,26 @@ function meta::external::query::graphQL::transformation::mutationToPure::transfo
 //       l : meta::external::query::graphQL::metamodel::value::ListValue[1] | ^meta::pure::functions::collection::List<Any>(values = $l.values->map(v | meta::external::query::graphQL::transformation::mutationToPure::transformGraphQLTypeToPure($v, $pureType)));,
 //       i : meta::external::query::graphQL::metamodel::value::IntValue[1] | $i.value;,
 //       f : meta::external::query::graphQL::metamodel::value::FloatValue[1] | $f.value;,
-//       e : meta::external::query::graphQL::metamodel::value::EnumValue[1] | let ne = newEnumeration($pureType.name->toOne(), $e.value);
-//                                                                            let package = pathToPackage($pureType->cast(@PackageableElement).package->toOne()->elementToPath());
-//                                                                            ^$ne(package = $package);,
+//       // e : meta::external::query::graphQL::metamodel::value::EnumValue[1] | let ne = newEnumeration($pureType.name->toOne(), $e.value);
+//       //                                                                      let package = pathToPackage($pureType->cast(@PackageableElement).package->toOne()->elementToPath());
+//       //                                                                      ^$ne(package = $package);,
 //       b : meta::external::query::graphQL::metamodel::value::BooleanValue[1] | $b.value;,
-//       o : meta::external::query::graphQL::metamodel::value::ObjectValue[1] |  let transientClass = newClass($pureType.name->toOne());
-//                                                                               let package = pathToPackage($pureType->cast(@PackageableElement).package->toOne()->elementToPath());
-//                                                                               let transientType = ^$transientClass(package = $package);
-//                                                                               let ownerGenericType = ^GenericType(rawType = $transientType);
+//       // o : meta::external::query::graphQL::metamodel::value::ObjectValue[1] |  let transientClass = newClass($pureType.name->toOne());
+//       //                                                                         let package = pathToPackage($pureType->cast(@PackageableElement).package->toOne()->elementToPath());
+//       //                                                                         let transientType = ^$transientClass(package = $package);
+//       //                                                                         let ownerGenericType = ^GenericType(rawType = $transientType);
+//       //                                                                         let propertiesAndValues = $o.values->map(v | let targetProperty = $pureType->cast(@Class<Any>)->allProperties()->filter(p|$p.name == $v.name);
+//       //                                                                                                                      let targetType = $targetProperty.genericType.rawType->toOne();
+//       //                                                                                                                      let newValue = meta::external::query::graphQL::transformation::mutationToPure::transformGraphQLTypeToPure($v.value, $targetType);
+//       //                                                                                                                      let property = meta::pure::functions::meta::newProperty($v.name, $ownerGenericType, ^GenericType(rawType = $targetType), $targetProperty.multiplicity->toOne());
+//       //                                                                                                                      pair($property, ^KeyValue(key = $v.name, value = $newValue)););
+//       //                                                                         let properties = $propertiesAndValues->map(pv | $pv.first);
+//       //                                                                         let values = $propertiesAndValues->map(pv | $pv.second);
+//       //                                                                         $transientType->mutateAdd('properties', $properties);
+//       //                                                                         dynamicNew($transientType, $values);
+//       o : meta::external::query::graphQL::metamodel::value::ObjectValue[1] |  let package = pathToPackage($pureType->cast(@PackageableElement).package->toOne()->elementToPath());
+//                                                                               let transientClass = ^Class<Any>(name = $pureType.name->toOne(), package = $package);
+//                                                                               let ownerGenericType = ^GenericType(rawType = $transientClass);
 //                                                                               let propertiesAndValues = $o.values->map(v | let targetProperty = $pureType->cast(@Class<Any>)->allProperties()->filter(p|$p.name == $v.name);
 //                                                                                                                            let targetType = $targetProperty.genericType.rawType->toOne();
 //                                                                                                                            let newValue = meta::external::query::graphQL::transformation::mutationToPure::transformGraphQLTypeToPure($v.value, $targetType);
@@ -281,57 +307,8 @@ function meta::external::query::graphQL::transformation::mutationToPure::transfo
 //                                                                                                                            pair($property, ^KeyValue(key = $v.name, value = $newValue)););
 //                                                                               let properties = $propertiesAndValues->map(pv | $pv.first);
 //                                                                               let values = $propertiesAndValues->map(pv | $pv.second);
-//                                                                               $transientType->mutateAdd('properties', $properties);
-//                                                                               dynamicNew($transientType, $values);
+//                                                                               $transientClass->mutateAdd('properties', $properties);
+//                                                                               dynamicNew($transientClass, $values);                                                                              
 //     ]
 //   );
 // }
-
-
-// function meta::external::query::graphQL::binding::toPure::typeSystem::graphQLTypeSystemtoPure(doc:Document[1], package:String[1]) : meta::pure::metamodel::type::Type[*]
-// {
-//   let pack = buildTransientPackageFromString($package);
-
-//   // Pass 1
-//   let typesByName = $doc.definitions->map(def|
-//     $def->match(
-//       [
-//         o : ObjectTypeDefinition[1] | let no = newClass($o.name);
-//                                       let cp = ^$no(package = $pack);
-//                                       pair($o.name, $cp);,
-//         e : EnumTypeDefinition[1] | let ne = newEnumeration($e.name, $e.values.value);
-//                                     let ep = ^$ne(package = $pack);
-//                                     pair($e.name, $ep);
-//       ]
-//     )
-//   )->concatenate(meta::external::query::graphQL::binding::toPure::primitiveTypeMapping())->newMap();
-
-//   // Pass 2
-//   $doc.definitions->map(def|
-//     $def->match(
-//       [
-//         o : ObjectTypeDefinition[1] | let ownerType = $typesByName->get($o.name)->toOne();
-//                                       let ownerGType = ^GenericType(rawType=$ownerType);
-//                                       let properties = $o.fields->map(f |
-//                                           let targetName = $f.type->match([
-//                                             o:NamedTypeReference[1] | pair(if($o.nullable,|ZeroOne,|PureOne), $o.name),
-//                                             l:ListTypeReference[1] | pair(ZeroMany, $l.itemType->cast(@NamedTypeReference).name)
-//                                           ]);
-//                                           let targeType = $typesByName->get($targetName.second)->toOne();
-//                                           meta::pure::functions::meta::newProperty($f.name, $ownerGType, ^GenericType(rawType=$targeType), $targetName.first);
-//                                       );
-//                                       $ownerType->mutateAdd('properties', $properties);,
-//         e : EnumTypeDefinition[1] | $typesByName->get($e.name)->toOne();
-//       ]
-//     )
-//   );
-// }
-
-// function meta::external::query::graphQL::binding::toPure::buildTransientPackageFromString(package:String[1]) : Package[1]
-// {
-//   $package->split('::')->fold({a,b|^Package(name = $a, package=$b)}, ^Package());
-// }
-
-
-
-

@@ -219,7 +219,8 @@ public class GraphQLExecute extends GraphQL
                     query,
                     () -> resolvedInteractiveApplication._queryClass(),
                     () -> resolvedInteractiveApplication._mapping(),
-                    () -> resolvedInteractiveApplication._runtime());
+                    () -> resolvedInteractiveApplication._runtime(),
+                    pm);
         }
         catch (Exception ex)
         {
@@ -242,7 +243,8 @@ public class GraphQLExecute extends GraphQL
                     query,
                     () -> pureModel.getClass(queryClassPath),
                     () -> pureModel.getMapping(mappingPath),
-                    () -> pureModel.getRuntime(runtimePath));
+                    () -> pureModel.getRuntime(runtimePath),
+                    pm);
         }
         catch (Exception ex)
         {
@@ -255,7 +257,8 @@ public class GraphQLExecute extends GraphQL
             Query query,
             Function0<org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?>> classFunction0,
             Function0<Mapping> mappingFunction0,
-            Function0<org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime> runtimeFunction0)
+            Function0<org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime> runtimeFunction0,
+            ProfileManager<CommonProfile> profileManager)
     {
         org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> _class = classFunction0.value();
 
@@ -268,11 +271,11 @@ public class GraphQLExecute extends GraphQL
 
         if (operationType == OperationType.subscription)
         {
-            return this.executeSubscription(_class, pureModel, mapping, runtime, queryDoc);
+            return this.executeSubscription(_class, pureModel, mapping, runtime, queryDoc, profileManager);
         }
         else if (operationType == OperationType.mutation)
         {
-            return this.executeMutation(_class, pureModel, mapping, runtime, queryDoc);
+            return this.executeMutation(_class, pureModel, mapping, runtime, queryDoc, profileManager);
         }
         else if (operationType == OperationType.query)
         {
@@ -296,7 +299,8 @@ public class GraphQLExecute extends GraphQL
             PureModel pureModel,
             Mapping mapping,
             org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime runtime,
-            org.finos.legend.pure.generated.Root_meta_external_query_graphQL_metamodel_Document queryDoc)
+            org.finos.legend.pure.generated.Root_meta_external_query_graphQL_metamodel_Document queryDoc,
+            ProfileManager<CommonProfile> profileManager)
     {
         Pair<? extends AbstractProperty<? extends Object>, ? extends PureMap> propertyAndArguments = core_external_query_graphql_transformation.Root_meta_external_query_graphQL_transformation_mutationToPure_graphQLDocumentToPure_Class_1__Document_1__Pair_MANY_(_class, queryDoc, pureModel.getExecutionSupport()).getOnly();
         QualifiedProperty queryProperty = (QualifiedProperty) propertyAndArguments._first();
@@ -307,11 +311,10 @@ public class GraphQLExecute extends GraphQL
         VariableExpression payloadArgument = qualifiedPropertyArguments.detect(qpa -> qpa._genericType()._rawType().equals(queryProperty._genericType()._rawType()));
         Root_meta_json_JSONElement newInstance = payloadArgument == null ? null : (Root_meta_json_JSONElement) argumentsByName.getMap().get(payloadArgument._name());
 
-        //TODO: AJH: fetch the current instance by invoking the property
-        Root_meta_json_JSONElement instanceFromPropertyInvocation = null;
+        MutableList<CommonProfile> profiles = ProfileManagerHelper.extractProfiles(profileManager);
 
         AlloyWrite alloyWrite = instantiateAlloyWriteInstance(runtime);
-        Root_meta_json_JSONElement persistedInstance = alloyWrite.persist(pureModel, mapping, runtime, _class, instanceFromPropertyInvocation, newInstance);
+        Root_meta_json_JSONElement persistedInstance = alloyWrite.persist(pureModel, mapping, runtime, profiles, queryProperty, argumentsByName, newInstance);
 
         return Response.ok(
                 (StreamingOutput) outputStream ->
@@ -390,13 +393,13 @@ public class GraphQLExecute extends GraphQL
         }
     }
 
-    private static AlloyWrite instantiateAlloyWriteInstance(org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime runtime)
+    private AlloyWrite instantiateAlloyWriteInstance(org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime runtime)
     {
         //TODO: AJH: make this better - push to Store implementation?
         java.lang.Class<? extends Connection> connectionClass = runtime._connections().getOnly().getClass();
         if (Root_meta_pure_alloy_connections_RelationalDatabaseConnection.class.isAssignableFrom(connectionClass))
         {
-            return new RelationalAlloyWrite();
+            return new RelationalAlloyWrite(this.planExecutor);
         }
 
         throw new IllegalStateException("Unsupported store connection: " + connectionClass.getName());
@@ -407,7 +410,8 @@ public class GraphQLExecute extends GraphQL
             PureModel pureModel,
             Mapping mapping,
             org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime runtime,
-            org.finos.legend.pure.generated.Root_meta_external_query_graphQL_metamodel_Document queryDoc)
+            org.finos.legend.pure.generated.Root_meta_external_query_graphQL_metamodel_Document queryDoc,
+            ProfileManager<CommonProfile> profileManager)
     {
         return Response.status(Response.Status.BAD_REQUEST).entity("not yet implemented").type("text/plain").build();
     }

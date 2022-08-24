@@ -14,17 +14,23 @@
 
 package org.finos.legend.engine.write.api;
 
+import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.pure.generated.Root_meta_json_JSONElement;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.mapping.Mapping;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.property.QualifiedProperty;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime;
+import org.finos.legend.pure.runtime.java.compiled.generation.processors.support.map.PureMap;
+import org.pac4j.core.profile.CommonProfile;
 
 public interface AlloyWrite
 {
     Root_meta_json_JSONElement persist(
             PureModel pureModel,
             Mapping mapping,
-            org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime runtime,
-            org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> graphQLQueryClass,
-            Root_meta_json_JSONElement existingInstance,
+            Runtime runtime,
+            MutableList<CommonProfile> profiles,
+            QualifiedProperty graphQLQueryProperty,
+            PureMap propertyArguments,
             Root_meta_json_JSONElement newInstance);
 }
