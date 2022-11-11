@@ -341,7 +341,7 @@ public class TestExtensions
                 .with("core_external_format_flatdata_java_platform_binding")
                 .with("core_external_format_json_java_platform_binding")
                 .with("core_external_format_xml_java_platform_binding")
-                .with("core_configuration");
+                .with("core_configuration")
                 .with("core_text")
                 .with("core_write");
     }
