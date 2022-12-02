@@ -211,6 +211,7 @@
         <module>legend-engine-xt-relationalStore-javaPlatformBinding-pure</module>
         <module>legend-engine-xt-serviceStore-javaPlatformBinding-pure</module>
         <module>legend-engine-pure-code-compiled-core-configuration</module>
+        <module>legend-engine-xt-relationalStore-dbExtension-archetype</module>
         <module>legend-engine-xt-write</module>
     </modules>
 
@@ -496,7 +497,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-
                     <useSystemClassLoader>true</useSystemClassLoader>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <trimStackTrace>false</trimStackTrace>
