@@ -33,10 +33,11 @@ public class PureIDELight extends PureIDEServer
     public static void main(String[] args) throws Exception
     {
         PureIDELight.enableEngineIntegration();
-        new PureIDELight().run(args.length == 0 ? new String[] {"server", "legend-engine-pure-ide-light/src/main/resources/ideLightConfig.json"} : args);
+        new PureIDELight().run(args.length == 0 ? new String[]{"server", "legend-engine-pure-ide-light/src/main/resources/ideLightConfig.json"} : args);
     }
 
-    public MutableList<RepositoryCodeStorage> buildRepositories(SourceLocationConfiguration sourceLocationConfiguration)
+    @Override
+    protected MutableList<RepositoryCodeStorage> buildRepositories(SourceLocationConfiguration sourceLocationConfiguration)
     {
         String ideFilesLocation = Optional.ofNullable(sourceLocationConfiguration).map(s -> s.ideFilesLocation).orElse("legend-engine-pure-ide-light/src/main/resources/pure_ide");
         return Lists.mutable.<RepositoryCodeStorage>empty()
