@@ -332,6 +332,7 @@ public class TestExtensions
                 .with("core_persistence_cloud")
                 .with("core_relational")
                 .with("core_servicestore")
-                .with("core_text");
+                .with("core_text")
+                .with("core_write");
     }
 }

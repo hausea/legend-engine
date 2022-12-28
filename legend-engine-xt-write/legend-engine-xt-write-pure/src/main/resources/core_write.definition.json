@@ -1,0 +1,5 @@
+{
+  "name" : "core_write",
+  "pattern" : "(meta::pure::write)(::.*)?",
+  "dependencies" : ["platform", "core"]
+}

@@ -133,7 +133,7 @@ public class GraphQLExecute extends GraphQL
 
             Document document = GraphQLGrammarParser.newInstance().parseDocument(query.query);
             org.finos.legend.pure.generated.Root_meta_external_query_graphQL_metamodel_Document queryDoc = toPureModel(document, pureModel);
-            if (isQueryIntrospection(findQuery(document)))
+            if (isQueryIntrospection(document))
             {
                 return Response.ok("").type(MediaType.TEXT_HTML_TYPE).build();
             }
@@ -188,7 +188,7 @@ public class GraphQLExecute extends GraphQL
 
             Document document = GraphQLGrammarParser.newInstance().parseDocument(query.query);
             org.finos.legend.pure.generated.Root_meta_external_query_graphQL_metamodel_Document queryDoc = toPureModel(document, pureModel);
-            if (isQueryIntrospection(findQuery(document)))
+            if (isQueryIntrospection(document))
             {
                 return Response.ok("{" +
                         "  \"data\":" + core_external_query_graphql_introspection_transformation.Root_meta_external_query_graphQL_introspection_graphQLIntrospectionQuery_Class_1__Document_1__String_1_(_class, queryDoc, pureModel.getExecutionSupport()) +
@@ -248,13 +248,13 @@ public class GraphQLExecute extends GraphQL
         }
     }
 
-    private boolean isQueryIntrospection(OperationDefinition operationDefinition)
+    private boolean isQueryIntrospection(Document document)
     {
-        List<Selection> selections = operationDefinition.selectionSet;
-        return !selections.isEmpty() && selections.get(0) instanceof Field && ((Field) selections.get(0)).name.equals("__schema");
+        OperationDefinition operationDefinition = this.findOperationDefinition(document);
+        return operationDefinition.type == OperationType.query && !operationDefinition.selectionSet.isEmpty() && operationDefinition.selectionSet.get(0) instanceof Field && ((Field) operationDefinition.selectionSet.get(0)).name.equals("__schema");
     }
 
-    private OperationDefinition findQuery(Document document)
+    private OperationDefinition findOperationDefinition(Document document)
     {
         Collection<Definition> res = Iterate.select(document.definitions, d -> d.accept(new DefinitionVisitor<Boolean>()
                                                                                         {
@@ -298,7 +298,7 @@ public class GraphQLExecute extends GraphQL
                                                                                             @Override
                                                                                             public Boolean visit(OperationDefinition val)
                                                                                             {
-                                                                                                return val.type == OperationType.query;
+                                                                                                return true;
                                                                                             }
 
                                                                                             @Override
@@ -335,11 +335,11 @@ public class GraphQLExecute extends GraphQL
 
         if (res.isEmpty())
         {
-            throw new RuntimeException("Please provide a query");
+            throw new RuntimeException("Please provide an operation definition");
         }
         else if (res.size() > 1)
         {
-            throw new RuntimeException("Found more than one query");
+            throw new RuntimeException("Found more than one operation definition");
         }
         else
         {

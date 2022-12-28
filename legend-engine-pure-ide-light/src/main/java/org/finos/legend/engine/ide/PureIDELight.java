@@ -35,6 +35,7 @@ public class PureIDELight extends PureIDEServer
 {
     public static void main(String[] args) throws Exception
     {
+        PureIDELight.enableEngineIntegration();
         new PureIDELight().run(args.length == 0 ? new String[] {"server", "legend-engine-pure-ide-light/src/main/resources/ideLightConfig.json"} : args);
     }
 
@@ -50,6 +51,7 @@ public class PureIDELight extends PureIDEServer
                     .<RepositoryCodeStorage>with(new ClassLoaderCodeStorage(CodeRepository.newPlatformCodeRepository()))
                     .with(this.buildCore("legend-engine-xt-persistence-pure", "persistence"))
                     .with(this.buildCore("legend-engine-xt-mastery-pure", "mastery"))
+                    .with(this.buildCore("legend-engine-xt-write/legend-engine-xt-write-pure", "write"))
                     .with(this.buildCore("legend-engine-xt-relationalStore-pure", "relational"))
                     .with(this.buildCore("legend-engine-xt-relationalStore-sqlserver-pure", "relational_sqlserver"))
                     .with(this.buildCore("legend-engine-xt-serviceStore-pure", "servicestore"))
@@ -91,5 +93,24 @@ public class PureIDELight extends PureIDEServer
                 GenericCodeRepository.build(Paths.get(resources + "/" + moduleName.replace("-", "_") + ".definition.json")),
                 Paths.get(resources + "/" + moduleName.replace("-", "_"))
         );
+    }
+
+    private static void enableEngineIntegration()
+    {
+
+        System.setProperty("alloy.test.server.host", "127.0.0.1");
+        System.setProperty("alloy.test.server.port", "6060");
+        System.setProperty("alloy.test.h2.port", "9092");
+        System.setProperty("alloy.test.clientVersion", "vX_X_X");
+        System.setProperty("alloy.test.serverVersion", "v1");
+        System.setProperty("alloy.test.serializationKind", "json");
+
+        System.setProperty("legend.test.server.host", "127.0.0.1");
+        System.setProperty("legend.test.server.port", "6060");
+        System.setProperty("legend.test.h2.port", "9092");
+        System.setProperty("legend.test.clientVersion", "vX_X_X");
+        System.setProperty("legend.test.serverVersion", "v1");
+        System.setProperty("legend.test.serializationKind", "json");
+
     }
 }

@@ -1,0 +1,75 @@
+// Copyright 2021 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import meta::external::query::graphQL::transformation::queryToPure::*;
+import meta::external::query::graphQL::introspection::*;
+import meta::external::query::graphQL::transformation::mutationToPure::*;
+import meta::external::query::graphQL::transformation::mutationToPure::tests::*;
+import meta::external::query::graphQL::metamodel::*;
+import meta::external::query::graphQL::metamodel::executable::*;
+import meta::external::query::graphQL::metamodel::value::*;
+
+function <<test.Test>> meta::external::query::graphQL::transformation::mutationToPure::tests::testMutationCreate():Boolean[1]
+{
+  let mapping = ^meta::pure::mapping::Mapping();
+  let runtime = ^meta::pure::runtime::Runtime();
+  let extensions = [];
+
+  let document = meta::external::query::graphQL::transformation::mutationToPure::tests::createGraphQLDocument();
+  let instances = meta::external::query::graphQL::transformation::mutationToPure::getPlansForGraphQLMutation(QueryClass, $document, $mapping, $runtime, $extensions);
+  println('----------------------test results--------------------------');
+  println($instances);
+  // println($instances->toOne().second->values());
+  println('----------------------test results--------------------------');
+  // println(^meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile(id=1, name='asdf'));
+  true;
+}
+
+function meta::external::query::graphQL::transformation::mutationToPure::tests::createGraphQLDocument(): ExecutableDocument[1]
+{
+  let arguments = ^Argument(name = 'automobile', value=^ObjectValue(values = [^ObjectKeyValue(name = 'name', value = ^StringValue(value = 'Porsche'))]));
+  let querySelectionSet = ^Field(name = 'id');
+  let returningSelectionSet = ^Field(name = 'returning', selectionSet = $querySelectionSet);
+  let mutationSelectionSet = ^Field(name = 'createAutomobile', arguments = $arguments, selectionSet = $returningSelectionSet);
+  let definitions = ^OperationDefinition(type = OperationType.mutation, selectionSet = $mutationSelectionSet);
+  ^ExecutableDocument(definitions = $definitions);
+}
+
+//TODO: AJH: would be cool if this did the persistence, but for now, lets just say each qp returns the existing instance
+//TODO: AJH: also.  since we delegate to engine, we need to annotate each qp as a mutating service (without interogating the parameter types)
+Class meta::external::query::graphQL::transformation::mutationToPure::tests::QueryClass
+{
+  findAutomobileById(id: Integer[1])
+  {
+    meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile.all()->filter(a|$a.id == $id)->toOne()
+  }: meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile[1];
+
+  createAutomobile(automobile: meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile[1])
+  {
+    ^$automobile(name = $automobile.name + '2')->meta::pure::write::functions::save();
+  }: meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile[1];
+
+  updateAutomobile(id: Integer[1], automobile: meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile[1])
+  {
+    let existingAutomobile = meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile.all()->filter(a|$a.id == $id)->toOne();
+    let updatedAutomobile = ^$existingAutomobile(name = $automobile.name);
+    $updatedAutomobile->meta::pure::write::functions::save();
+  }: meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile[1];
+}
+
+Class meta::external::query::graphQL::transformation::mutationToPure::tests::Automobile
+{
+  id: Integer[1];
+  name: String[1];
+}
