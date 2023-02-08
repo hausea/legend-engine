@@ -1,0 +1,111 @@
+// Copyright 2023 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import meta::pure::graphFetch::execution::*;
+import meta::external::shared::format::functions::*;
+import meta::external::shared::format::binding::*;
+import meta::pure::graphFetch::*;
+import meta::pure::mutation::execution::*;
+
+// NOTE: The op lock properties should belong in the mapping.  They can be included in the payload via hidden properties.  When executing a transaction, optimistic locking
+//        is enforced across the entire specified graph.  You cannot selectively choose one op lock vs. another (although questionable why two op locks are required in a single save)
+//       
+//       All mutation operate in the context of a graph fetch.  Doing so allows you to selectively apply updates/mutations in a specific context.
+//        If you choose not to include an attribute in the graph fetch, it remains untouched.  If specified, you can mutate, or delete.  
+//        The need to handle patch and/or update strategies isn't necessary if you specify the context in which you are submitting a change.
+//       
+//       save can either be upsert, or it can switch on the presence of the hidden properties field - if missing, insert, otherwise update
+//
+//       delete is separate from save, since we cannot distinguish a null-ing of all properties (leaving out of the payload) vs. a delete.
+//        In addition, if we need to present the identifier, or op lock property/version, the payload must be present, and cannot simply be referenced as []
+//
+
+native function meta::pure::mutation::execution::transaction(fn: Function<{->Any[*]}>[1], optimisticallyLock: Boolean[0..1]): Any[*];
+
+function meta::pure::mutation::execution::save<T>(type: Class<T>[1], rootGraphFetchTree: RootGraphFetchTree<T>[1], filter: Function<{T[1]->Boolean[1]}>[1], binding: Binding[1], values: String[*]): T[*]
+{
+  $type->save($rootGraphFetchTree, $filter, $values->map(v | internalize($rootGraphFetchTree.class, $binding, $v)));
+}
+
+native function meta::pure::mutation::execution::save<T>(type: Class<T>[1], rootGraphFetchTree: RootGraphFetchTree<T>[1], filter: Function<{T[1]->Boolean[1]}>[1], values: T[*]): T[*];
+
+function meta::pure::mutation::execution::delete<T>(type: Class<T>[1], rootGraphFetchTree: RootGraphFetchTree<T>[1], filter: Function<{T[1]->Boolean[1]}>[1], binding: Binding[1], values: String[*]): T[*]
+{
+  $type->delete($rootGraphFetchTree, $filter, $values->map(v | internalize($rootGraphFetchTree.class, $binding, $v)));
+}
+
+native function meta::pure::mutation::execution::delete<T>(type: Class<T>[1], rootGraphFetchTree: RootGraphFetchTree<T>[1], filter: Function<{T[1]->Boolean[1]}>[1], values: T[*]): T[*];
+
+
+// ------------------------ Examples ------------------------
+###Pure
+import meta::pure::graphFetch::*;
+import meta::pure::graphFetch::execution::*;
+import meta::pure::mutation::execution::*;
+import meta::pure::mutation::execution::example::*;
+
+
+Class meta::pure::mutation::execution::example::Person
+{
+  name: String[1];
+  (composite) account: Account[1];
+  children: Person[*];
+}
+
+Class meta::pure::mutation::execution::example::Account
+{
+  username: String[1];
+}
+
+function meta::pure::mutation::execution::example::examples(): Any[*]
+{   
+  // insert 
+  transaction(
+    {
+      | 
+        let newPerson = ^Person(name='PersonOne', account=^Account(username='person1'));
+        Person->save(#{Person{account, children}}#, person | $person.name == 'PersonOne', $newPerson);
+    },
+    true);
+
+  // update with to-one
+  transaction(
+    {
+      | 
+        let existingPerson = Person.all()->filter(p | $p.name == 'PersonOne')->graphFetch(#{Person{account, children}}#)->toOne();
+        let newPerson = ^$existingPerson(name = 'PersonOneNew');
+        Person->save(#{Person{account, children}}#, person | $person.name == 'PersonOne', $newPerson);
+    },
+    true);
+
+  // update with to-many
+  transaction(
+    {
+      | 
+        let existingPerson = Person.all()->filter(p | $p.name == 'PersonOne')->graphFetch(#{Person{account, children}}#)->toOne();
+        // let newChildren = $existingPerson.children->filter(p | $p.name == 'ChildOne')->each(p | Person->delete(#{Person}, person -> $person.name == $p.name, $p));
+        let newChildren = $existingPerson.children->filter(p | $p.name == 'ChildOne');
+        let newPerson = ^$existingPerson(name = 'PersonOneNew', children = $newChildren);
+        Person->save(#{Person{account, children}}#, person | $person.name == 'PersonOne', $newPerson);
+    },
+    true);
+
+  // delete (need to get the op lock property, so query first)
+  transaction(
+    {
+      | let existingPerson = Person.all()->filter(p | $p.name == 'PersonOne')->graphFetch(#{Person{account, children}}#)->toOne();
+      Person->delete(#{Person{account, children}}#, person | $person.name == 'PersonOne', $existingPerson);
+    },
+    true);
+}
