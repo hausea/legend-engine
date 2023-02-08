@@ -102,7 +102,7 @@ function <<access.private>> meta::external::query::graphQL::transformation::quer
 
 ###Pure
 import meta::external::query::graphQL::transformation::queryToPure::*;
-import meta::external::query::graphQL::metamodel::executable::*;
+import meta::external::query::graphQL::metamodel::sdl::executable::*;
 
 function meta::external::query::graphQL::transformation::queryToPure::getPlansFromGraphQL(
                                                                           cl:Class<Any>[1],
@@ -116,7 +116,7 @@ function meta::external::query::graphQL::transformation::queryToPure::getPlansFr
 
   $query.definitions->map(d|
     $d->match([
-      {o : OperationDefinition[1]| if($o.type == meta::external::query::graphQL::metamodel::executable::OperationType.mutation, 
+      {o : OperationDefinition[1]| if($o.type == meta::external::query::graphQL::metamodel::sdl::executable::OperationType.mutation,
                                      |meta::external::query::graphQL::transformation::mutationToPure::getPlansForGraphQLMutation($cl, $query, $mapping, $runtime, $extensions),
                                      //TODO: AJH: add result deep fetch here
                                      |let graphFetch = meta::external::query::graphQL::transformation::queryToPure::graphQLExecutableToPure($query, $cl);

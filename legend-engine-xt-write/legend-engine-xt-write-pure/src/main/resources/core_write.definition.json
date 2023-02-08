@@ -1,5 +1,5 @@
 {
   "name" : "core_write",
   "pattern" : "(meta::pure::write)(::.*)?",
-  "dependencies" : ["platform", "core"]
+  "dependencies" : ["platform", "core", "core_java_platform_binding", "core_external_language_java"]
 }

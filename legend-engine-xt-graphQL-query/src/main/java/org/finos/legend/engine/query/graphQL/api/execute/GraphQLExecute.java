@@ -68,8 +68,6 @@ import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.engine.shared.core.kerberos.ProfileManagerHelper;
 import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionTool;
 import org.finos.legend.engine.shared.core.operational.logs.LoggingEventType;
-import org.finos.legend.pure.generated.core_external_query_graphql_transformation;
-import org.finos.legend.pure.generated.core_external_query_graphql_introspection_transformation;
 import org.finos.legend.pure.generated.Root_meta_pure_executionPlan_ExecutionPlan;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.generated.core_external_query_graphql_transformation_transformation_graphFetch;

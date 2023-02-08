@@ -14,4 +14,9 @@
 
 import meta::pure::runtime::*;
 
-native function meta::pure::write::functions::save<T|n>(data: T[n]): T[n];
+// native function meta::pure::write::functions::save<T|n>(data: T[n]): T[n];
+
+function meta::pure::write::functions::save<T|n>(data: T[n]): T[n]
+{
+  $data
+}

@@ -19,7 +19,7 @@
     <parent>
         <artifactId>legend-engine-xt-write</artifactId>
         <groupId>org.finos.legend.engine</groupId>
-        <version>3.15.4-SNAPSHOT</version>
+        <version>3.30.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -38,7 +38,9 @@
                     <repositories>
                         <repository>platform</repository>
                         <repository>core</repository>
+                        <repository>core_java_platform_binding</repository>
                         <repository>core_write</repository>
+                        <repository>core_external_language_java</repository>
                     </repositories>
                     <extraRepositories>
                         <extraRepository>${project.basedir}/src/main/resources/core_write.definition.json</extraRepository>
@@ -61,6 +63,16 @@
                     <dependency>
                         <groupId>org.finos.legend.engine</groupId>
                         <artifactId>legend-engine-pure-code-compiled-core</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.finos.legend.engine</groupId>
+                        <artifactId>legend-engine-xt-javaPlatformBinding-pure</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.finos.legend.engine</groupId>
+                        <artifactId>legend-engine-xt-javaGeneration-pure</artifactId>
                         <version>${project.version}</version>
                     </dependency>
                 </dependencies>
@@ -96,7 +108,54 @@
                         <artifactId>legend-engine-pure-code-compiled-core</artifactId>
                         <version>${project.version}</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.finos.legend.engine</groupId>
+                        <artifactId>legend-engine-xt-javaPlatformBinding-pure</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.finos.legend.engine</groupId>
+                        <artifactId>legend-engine-xt-javaGeneration-pure</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>pre-compile</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>
+                        org.finos.legend.pure.runtime.java.compiled.generation.JavaClassLoaderSourceCodeGenerator
+                    </mainClass>
+                    <arguments>
+                        <argument>${project.build.directory}/generated-sources/</argument>
+                        <argument>
+                            org.finos.legend.pure.code.write.compiled.WriteExtensionCompiled
+                        </argument>
+                        <argument>Write</argument>
+                        <includeProjectDependencies>true</includeProjectDependencies>
+                    </arguments>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -126,19 +185,33 @@
             <groupId>org.finos.legend.pure</groupId>
             <artifactId>legend-pure-m3-core</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.finos.legend.pure</groupId>-->
-<!--            <artifactId>legend-pure-m2-dsl-mapping</artifactId>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>org.finos.legend.pure</groupId>
-            <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.finos.legend.pure</groupId>
             <artifactId>legend-pure-code-compiled-platform-java</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-xt-javaPlatformBinding-pure</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.finos.legend.pure</groupId>
+                    <artifactId>legend-pure-m3-platform</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-xt-javaGeneration-pure</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.finos.legend.pure</groupId>
+                    <artifactId>legend-pure-m3-platform</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- PURE -->
 
@@ -169,7 +242,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
         <!-- TEST -->
     </dependencies>
