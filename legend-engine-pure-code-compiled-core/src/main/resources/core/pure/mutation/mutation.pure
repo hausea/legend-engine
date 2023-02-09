@@ -97,6 +97,7 @@ function meta::pure::mutation::execution::example::examples(): Any[*]
         // let newChildren = $existingPerson.children->filter(p | $p.name == 'ChildOne')->each(p | Person->delete(#{Person}, person -> $person.name == $p.name, $p));
         let newChildren = $existingPerson.children->filter(p | $p.name == 'ChildOne');
         let newPerson = ^$existingPerson(name = 'PersonOneNew', children = $newChildren);
+        // ^Person.all()->filter(p | $p.name == 'PersonOne')->graphFetch(#{Person{account, children}}#)->toOne()(name = 'PersonOneNew', children = Person.all()->filter(p | $p.name == 'PersonOne')->graphFetch(#{Person{account, children}}#)->toOne().children->filter(p | $p.name == 'ChildOne'))
         Person->save(#{Person{account, children}}#, person | $person.name == 'PersonOne', $newPerson);
     },
     true);
